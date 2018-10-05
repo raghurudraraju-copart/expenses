@@ -221,7 +221,7 @@ app.get('/sqliteDBRecordsTest', function(req, res, next) {
 // * Adding expenses * //
 
 /* GET users listing. */
-app.get('/createTransactions', function(req, res, next) {
+app.post('/createTransactions', function(req, res, next) {
 
   db.serialize(() => {
     const id = 1;
