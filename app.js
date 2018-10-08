@@ -124,9 +124,9 @@ app.get('/users', function(req, res, next) {
 });
 
 app.get('/createDataBaseTables', function(req, res, next) {
-  db.run("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, userName TEXT UNIQUE, firstName TEXT, lastName TEXT, password TEXT, role TEXT, createdDate TEXT )");
-  db.run("CREATE TABLE transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, userName TEXT, description TEXT, accountFrom TEXT, accountTo TEXT, amount FLOAT, date TEXT, createdDate TEXT )");
-  db.run("CREATE TABLE payments (id INTEGER PRIMARY KEY AUTOINCREMENT, userName TEXT, type TEXT, description TEXT, accountFrom TEXT, accountTo TEXT, amount FLOAT, date TEXT, createdDate TEXT )");
+  db.run("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, firstName TEXT, lastName TEXT, password TEXT, role TEXT, createdDate TEXT )");
+  db.run("CREATE TABLE transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, username TEXT, description TEXT, accountFrom TEXT, accountTo TEXT, amount FLOAT, date TEXT, createdDate TEXT )");
+  db.run("CREATE TABLE payments (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, type TEXT, description TEXT, balance FLOAT, createdDate TEXT, lastModified TEXT )");
   db.run("CREATE TABLE transcations_types (id	INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT)");
   //db.run("INSERT INTO transcations_types (type) VALUES (Credit)");
   //db.run("INSERT INTO transcations_types (type) VALUES (Debit)");
@@ -149,6 +149,35 @@ app.get('/dropDataBaseTables', function(req, res, next) {
   db.run("DROP TABLE transcations_types;");
   db.run("DROP TABLE payment_modes;");
   res.json({type: "dropDataBaseTables", result: "Success"});
+});
+
+app.post('/login', function(req, res, next) {
+  startDB();
+  var username = req.body.username;
+  var password = req.body.password;
+
+  let sql = `SELECT username, password, role from users where username= ?`;
+
+// first row only
+db.get(sql, [username], (err, result) => {
+  if(err){
+      console.log("Error: ", err);
+      res.json({ error:"User Not Found."});
+    }
+
+  if(result === undefined) {
+    res.json({ error:"User Not Found."});
+  } else if(password != result.password){
+      res.json({ error:"Invalid password."});
+    } else {
+      //const {username, role} = result.data;
+      res.json({data:{username:result.username, role:result.role}});
+    }
+
+  });
+
+  db.close();
+
 });
 
 
@@ -218,38 +247,80 @@ app.get('/sqliteDBRecordsTest', function(req, res, next) {
 });
 
 
-// * Adding expenses * //
-
-/* GET users listing. */
-app.post('/createTransactions', function(req, res, next) {
+/* method: post - creating payment. */
+app.post('/createPayments', function(req, res, next) {
 
   db.serialize(() => {
-    const id = 1;
-    const username = "Raghu";
-    const type = "Credit";
-    const description = 'Loading Money from CreditCard to Paytm';
-    const amount = 123.45;
-    const amountFrom = "CreditCard";
-    const amountTo = "PayTm";
+    //const id = 1;
+    const username = request.body.username || "Raghu";
+    const type = request.body.paymentType || "Cash";
+    const description = request.body.description || 'Loading Money from CreditCard to Paytm';
+    const balance = request.body.balance || 123.45;
     const createdDate = new Date();
-    const date = new Date(123456789);
-    db.run("INSERT INTO transactions (id, username, type, description, amount, accountFrom, accountTo, createdDate, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", `${id}`, `${username}`, `${type}`, `${description}`, `${amount}`, `${amountFrom}`, `${amountTo}`, `${createdDate}`, `${date}`);
-    // db.each(`SELECT PlaylistId as id,
-    //                 Name as name
-    //          FROM playlists`, (err, row) => {
-    db.each(`SELECT id, name FROM transactions`, (err, row) => {
-      if (err) {
-        console.error(err.message);
-      }
-      console.log(row);
-    });
+    const lastModified = new Date();
+    db.run("INSERT INTO payments (username, type, description, balance, createdDate, lastModified) VALUES (?, ?, ?, ?, ?, ?)", `${username}`, `${type}`, `${description}`, `${balance}`, `${createdDate}`, `${lastModified}`);
   });
 
   db.close((err) => {
     if (err) {
       console.error(err.message);
+      res.json({ type: "createPayments", result: "Failure", message: err.message });
     }
-    //console.log('Close the database connection.');
+    res.json({type: "createPayments", result: "Success", message: "Successfully Created payment."});
+    startDB();
+  });
+
+});
+
+/* method: post - creating payment. */
+app.post('/updatePayments', function(req, res, next) {
+
+  db.serialize(() => {
+    //const id = 1;
+    const id = request.query.userId
+    const username = request.body.username || "Raghu";
+    const type = request.body.paymentType || "Cash";
+    const description = request.body.description || 'Loading Money from CreditCard to Paytm';
+    const balance = request.body.balance || 0.00;
+    const lastModified = new Date();
+    //UPDATE table_name SET column1 = value1, column2 = value2, WHERE condition;
+    db.run("UPDATE payments SET username=${username}, type=${type}, description=${description}, balance, createdDate, lastModified ", `${balance}`, `${createdDate}`, `${lastModified}`);
+  });
+
+  db.close((err) => {
+    if (err) {
+      console.error(err.message);
+      res.json({ type: "updatePayments", result: "Failure", message: err.message });
+    }
+    res.json({type: "updatePayments", result: "Success", message: "Successfully Updated payment."});
+    startDB();
+  });
+
+});
+
+/* method: post - creating transcation. */
+app.post('/createTransactions', function(req, res, next) {
+
+  db.serialize(() => {
+    //const id = 1;
+    const username = request.body.username || "Raghu";
+    const type = request.body.transactionType || "Credit";
+    const description = request.body.description || 'Loading Money from CreditCard to Paytm';
+    const amount = request.body.amount || 123.45;
+    const accountFrom = request.body.accountFrom || "CreditCard";
+    const accountTo = request.body.accountTo || "PayTm";
+    const createdDate = request.body.createdDate || new Date();
+    const date = new Date(request.body.date || new Date());
+    db.run("INSERT INTO transactions (username, type, description, amount, accountFrom, accountTo, createdDate, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", `${username}`, `${type}`, `${description}`, `${amount}`, `${amountFrom}`, `${amountTo}`, `${createdDate}`, `${date}`);
+  });
+
+  db.close((err) => {
+    if (err) {
+      console.error(err.message);
+      res.json({ type: "createTransactions", result: "Failure", message: err.message });
+    }
+    res.json({type: "createTransactions", result: "Success", message: "Successfully Created transcation."});
+    startDB();
   });
 
 });
