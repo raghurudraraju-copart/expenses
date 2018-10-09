@@ -35,10 +35,10 @@ function startDB(){
   });
 }
 
-startDB();
+
 
 app.get('/usersList', function(req, res, next) {
-
+startDB();
   var outputJSON = []
   db.serialize(function() {
     db.each('SELECT * FROM users', (err, row) => {
@@ -57,11 +57,10 @@ app.get('/usersList', function(req, res, next) {
     res.json(outputJSON);
     console.log('Close the database connection.');
   });
-  startDB();
 });
 
 app.get('/paymentModes', function(req, res, next) {
-
+  startDB();
   var outputJSON = []
   db.serialize(function() {
     db.each('SELECT * FROM payment_modes', (err, row) => {
@@ -80,11 +79,10 @@ app.get('/paymentModes', function(req, res, next) {
     res.json(outputJSON);
     console.log('Close the database connection.');
   });
-  startDB();
 });
 
 app.get('/transcationsTypes', function(req, res, next) {
-
+  startDB();
   var outputJSON = []
   db.serialize(function() {
     db.each('SELECT * FROM transcations_types', (err, row) => {
@@ -103,7 +101,6 @@ app.get('/transcationsTypes', function(req, res, next) {
     res.json(outputJSON);
     console.log('Close the database connection.');
   });
-  startDB();
   //outputJSON.push(row);
   //res.json(outputJSON)
 });
@@ -249,7 +246,7 @@ app.get('/sqliteDBRecordsTest', function(req, res, next) {
 
 /* method: post - creating payment. */
 app.post('/createPayments', function(req, res, next) {
-
+  startDB();
   db.serialize(() => {
     //const id = 1;
     const username = request.body.username || "Raghu";
@@ -267,14 +264,14 @@ app.post('/createPayments', function(req, res, next) {
       res.json({ type: "createPayments", result: "Failure", message: err.message });
     }
     res.json({type: "createPayments", result: "Success", message: "Successfully Created payment."});
-    startDB();
+
   });
 
 });
 
 /* method: post - creating payment. */
 app.post('/updatePayments', function(req, res, next) {
-
+  startDB();
   db.serialize(() => {
     //const id = 1;
     const id = request.query.userId
@@ -293,14 +290,14 @@ app.post('/updatePayments', function(req, res, next) {
       res.json({ type: "updatePayments", result: "Failure", message: err.message });
     }
     res.json({type: "updatePayments", result: "Success", message: "Successfully Updated payment."});
-    startDB();
+
   });
 
 });
 
 /* method: post - creating transcation. */
 app.post('/createTransactions', function(req, res, next) {
-
+  startDB();
   db.serialize(() => {
     //const id = 1;
     const username = request.body.username || "Raghu";
@@ -320,7 +317,7 @@ app.post('/createTransactions', function(req, res, next) {
       res.json({ type: "createTransactions", result: "Failure", message: err.message });
     }
     res.json({type: "createTransactions", result: "Success", message: "Successfully Created transcation."});
-    startDB();
+
   });
 
 });

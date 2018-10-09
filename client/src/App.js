@@ -3,7 +3,7 @@ import { history } from './helpers/history.js';
 import { Router, Route, Switch } from 'react-router-dom';
 import { Provider } from 'react-redux';
 
-import Master from './master/Master';
+import Home from './home/home';
 import Login from './login/Login';
 import { store } from './store.js'
 
@@ -17,7 +17,7 @@ class App extends Component {
       <Provider store={store}>
         <Router history = {history}>
           <Switch>
-                  <Route path="/master" component={Master} />
+                  <Route path="/home" component={Home} />
                   <Route exact path="/" component={Login} />
           </Switch>
         </Router>

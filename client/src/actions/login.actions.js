@@ -1,30 +1,47 @@
-import {history} from '../helpers/history.js';
+import {
+  history
+} from '../helpers/history.js';
 import axios from 'axios';
 
+
 export const loginActions = {
-    login
+  login
 };
 
 function login(username, password) {
   return dispatch => {
-  const requestOptions = {
-      headers: { 'Content-Type': 'application/json' },
-      body: {"username": username, "password": password}
-  };
+    const requestOptions = {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: {
+        "username": username,
+        "password": password
+      }
+    };
 
-  axios.post('https://g-ops-qa4.copart.com/login', requestOptions.body)
-  .then(res => {
-    const userDetails = res.data;
-    dispatch(success());
-    history.push('/master');
-  })
-  .catch(function (error) {
-    dispatch(failure());
-  });
-}
+    axios.post('http://localhost:5000/login', requestOptions.body)
+      .then(res => {
+        const userDetails = res.data;
+          dispatch(success(userDetails));
+          history.push('/home');
+       })
+      .catch(function(error) {
+        dispatch(failure());
+      });
+  }
 
-  function success() { return { type: "Master_Page" } }
-  function failure() { return { type: "Login_Failure" } }
+  function success(userDetails) {
+    return {
+      type: "Login_User",
+      payload: userDetails
+    }
+  }
 
- }
+  function failure() {
+    return {
+      type: "Login_Failure"
+    }
+  }
+
 }
