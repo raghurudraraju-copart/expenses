@@ -152,7 +152,7 @@ app.post('/login', function(req, res, next) {
   startDB();
   var username = req.body.username;
   var password = req.body.password;
-
+  console.log(username, password);
   let sql = `SELECT username, password, role from users where username= ?`;
 
 // first row only
