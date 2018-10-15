@@ -1,30 +1,16 @@
 var express = require('express');
 var sqlite3 = require('sqlite3').verbose()
-//var db = new sqlite3.Database(':memory:')
+var async = require('async');
 
 const bodyParser = require('body-parser');
 
-
-//var sqliteDB = require('sqlite');
-//var SQL =  require('sql-template-strings');
-
 var router = express.Router();
-
-//const dbPromise = sqlite.open('./database.sqlite', { Promise });
 
 var app = express();
 
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
-//const db = await sqliteDB.open('./database.sqlite.sql');
-
-// let db = new sqlite3.Database(':memory:', (err) => {
-//   if (err) {
-//     return console.error(err.message);
-//   }
-//   console.log('Connected to the in-memory SQlite database.');
-// });
 var db;
 function startDB(){
   db = new sqlite3.Database('./db/dev.sqlite.db', (err) => {
@@ -34,86 +20,73 @@ function startDB(){
     console.log('Connected to the Development database.');
   });
 }
-
 startDB();
 
 app.get('/usersList', function(req, res, next) {
 
-  var outputJSON = []
-  db.serialize(function() {
-    db.each('SELECT * FROM users', (err, row) => {
-      if (err) {
-        console.error(err.message);
-      }
-      outputJSON.push(row);
-      console.log(row);
-    });
-  });
-  //res.json(outputJSON);
-  db.close((err) => {
-    if (err) {
-      console.error(err.message);
-    }
-    res.json(outputJSON);
-    console.log('Close the database connection.');
-  });
   startDB();
+
+  db.all('SELECT * FROM users', (err, result) => {
+
+    if(err){
+      console.log("usersList Error: ", err);
+      res.json({type: "usersList", error: "Unable to fetch data."});
+    }
+
+    if(result === undefined) {
+      res.json({ message:"Records Not Found."});
+    } else {
+      res.json(result);
+    }
+
+  });
+
+  db.close();
 });
 
 app.get('/paymentModes', function(req, res, next) {
 
-  var outputJSON = []
-  db.serialize(function() {
-    db.each('SELECT * FROM payment_modes', (err, row) => {
-      if (err) {
-        console.error(err.message);
-      }
-      outputJSON.push(row);
-      console.log(row);
-    });
-  });
-  //res.json(outputJSON);
-  db.close((err) => {
-    if (err) {
-      console.error(err.message);
-    }
-    res.json(outputJSON);
-    console.log('Close the database connection.');
-  });
   startDB();
+
+  db.all('SELECT * FROM payment_modes', (err, result) => {
+    if(err){
+      console.log("paymentModes Error: ", err);
+      res.json({type: "paymentModes", error: "Unable to fetch data."});
+    }
+
+    if(result === undefined) {
+      res.json({ message:"Records Not Found."});
+    } else {
+      res.json(result);
+    }
+  });
+
+  db.close();
+
 });
 
 app.get('/transcationsTypes', function(req, res, next) {
 
-  var outputJSON = []
-  db.serialize(function() {
-    db.each('SELECT * FROM transcations_types', (err, row) => {
-      if (err) {
-        console.error(err.message);
-      }
-      outputJSON.push(row);
-      console.log(row);
-    });
-  });
-  //res.json(outputJSON);
-  db.close((err) => {
-    if (err) {
-      console.error(err.message);
-    }
-    res.json(outputJSON);
-    console.log('Close the database connection.');
-  });
   startDB();
-  //outputJSON.push(row);
-  //res.json(outputJSON)
+
+  db.all('SELECT * FROM transcation_types', (err, result) => {
+    if(err){
+      console.log("transcationsTypes Error: ", err);
+      res.json({type: "transcationsTypes", error: "Unable to fetch data."});
+    }
+
+    if(result === undefined) {
+      res.json({ message:"Records Not Found."});
+    } else {
+      res.json(result);
+    }
+  });
+
+  db.close();
 });
 
 /* GET users listing. */
 app.get('/users', function(req, res, next) {
-	// Comment out this line:
-  //res.send('respond with a resource');
-
-  // And insert something like this instead:
   res.json([{
   	id: 1,
   	username: "Raghu"
@@ -124,30 +97,40 @@ app.get('/users', function(req, res, next) {
 });
 
 app.get('/createDataBaseTables', function(req, res, next) {
+  startDB();
   db.run("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, firstName TEXT, lastName TEXT, password TEXT, role TEXT, createdDate TEXT )");
-  db.run("CREATE TABLE transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, username TEXT, description TEXT, accountFrom TEXT, accountTo TEXT, amount FLOAT, date TEXT, createdDate TEXT )");
-  db.run("CREATE TABLE payments (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, type TEXT, description TEXT, balance FLOAT, createdDate TEXT, lastModified TEXT )");
-  db.run("CREATE TABLE transcations_types (id	INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT)");
-  //db.run("INSERT INTO transcations_types (type) VALUES (Credit)");
-  //db.run("INSERT INTO transcations_types (type) VALUES (Debit)");
-  //db.run("INSERT INTO transcations_types (type) VALUES (Transfer)");
-  db.run("CREATE TABLE payment_modes ('id'	INTEGER PRIMARY KEY AUTOINCREMENT, 'type' TEXT)");
-  //db.run("INSERT INTO payment_modes (type) VALUES (?)", "Cash");
-  //db.run("INSERT INTO payment_modes (type) VALUES (?)", "CreditCard");
-  //db.run("INSERT INTO payment_modes (type) VALUES (DebitCard)");
-  //db.run("INSERT INTO payment_modes (type) VALUES (PayTm)");
-  //db.run("INSERT INTO payment_modes (type) VALUES (PhonePe)");
+  db.run("CREATE TABLE transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER, username TEXT, description TEXT, paymentFrom INTEGER, paymentTo INTEGER, amount FLOAT, date TEXT, createdDate TEXT )");
+  db.run("CREATE TABLE user_payments (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, type INTEGER, description TEXT, balance FLOAT, createdDate TEXT, lastModified TEXT )");
+  db.run("CREATE TABLE transcation_types (id	INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT)");
+  db.run("CREATE TABLE payment_modes (id	INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, defaultPayment INTEGER DEFAULT 0)");
+  db.close();
   res.json({type: "createDataBaseTables", result: "Success"});
 });
 
+app.get('/createMasterTableData', function(req, res, next) {
+  startDB();
+  db.run("INSERT INTO transcation_types (type) VALUES (?)", "Credit");
+  db.run("INSERT INTO transcation_types (type) VALUES (?)", "Debit");
+  db.run("INSERT INTO transcation_types (type) VALUES (?)", "Transfer");
+  db.run("INSERT INTO payment_modes (type, defaultPayment) VALUES (?, ?)", "Cash", 1);
+  db.run("INSERT INTO payment_modes (type, defaultPayment) VALUES (?, ?)", "CreditCard", 0);
+  db.run("INSERT INTO payment_modes (type, defaultPayment) VALUES (?, ?)", "DebitCard", 0);
+  db.run("INSERT INTO payment_modes (type, defaultPayment) VALUES (?, ?)", "PayTm", 0);
+  db.run("INSERT INTO payment_modes (type, defaultPayment) VALUES (?, ?)", "PhonePe", 0);;
+  db.run("INSERT INTO payment_modes (type, defaultPayment) VALUES (?, ?)", "Gpay", 0);
+  db.run("INSERT INTO payment_modes (type, defaultPayment) VALUES (?, ?)", "Others", 1);
+  db.close();
+  res.json({type: "createMasterTableData", result: "Success"});
+});
+
 app.get('/dropDataBaseTables', function(req, res, next) {
-  //db.run("DROP TABLE playlists;");
-  //db.run("DROP TABLE PlaylistId;");
+  startDB();
   db.run("DROP TABLE users;");
   db.run("DROP TABLE transactions;");
-  db.run("DROP TABLE payments;");
-  db.run("DROP TABLE transcations_types;");
+  db.run("DROP TABLE user_payments;");
+  db.run("DROP TABLE transcation_types;");
   db.run("DROP TABLE payment_modes;");
+  db.close();
   res.json({type: "dropDataBaseTables", result: "Success"});
 });
 
@@ -162,15 +145,14 @@ app.post('/login', function(req, res, next) {
 db.get(sql, [username], (err, result) => {
   if(err){
       console.log("Error: ", err);
-      res.json({ error:"User Not Found."});
+      res.json({ error:"Unable to execute Database query."});
     }
 
-  if(result === undefined) {
-    res.json({ error:"User Not Found."});
-  } else if(password != result.password){
-      res.json({ error:"Invalid password."});
+    if(result === undefined) {
+      res.json({ error:"User Not Found."});
+    } else if(password != result.password){
+        res.json({ error:"Invalid password."});
     } else {
-      //const {username, role} = result.data;
       res.json({data:{username:result.username, role:result.role}});
     }
 
@@ -180,46 +162,62 @@ db.get(sql, [username], (err, result) => {
 
 });
 
+app.get('/checkUserAvailability', function(req, res, next) {
+
+  startDB();
+
+  var username = req.query.username;
+
+  let sql = `SELECT * from users where username= ?`;
+
+  // first row only
+  db.get(sql, [username], (err, result) => {
+    if(err){
+        console.log("Error: ", err);
+        res.json({ error:"Unable to execute Database query."});
+      }
+      console.log("result: ", result);
+    if(result === undefined) {
+      res.json({ message: "username available."});
+    } else if(result.length != 0){
+        res.json({data:{username:result.username}, error: "User already exist."});
+    }
+  });
+  db.close();
+});
+
+// Create user
+app.post('/createUser', function(req, res, next) {
+  startDB();
+  var username = req.body.username;
+  var firstName = req.body.firstName;
+  var lastName = req.body.lastName;
+  var password = req.body.password;
+  var role = req.body.role;
+  var createdDate = new Date();
+
+  db.run(`INSERT INTO users(username, firstName, lastName, password, role, createdDate) VALUES(?, ?, ?, ?, ?, ?)`, [username, firstName, lastName, password, role, createdDate], function(err) {
+    if(err){
+      console.log("Error: ", err);
+      res.json({ message:"Unable to execute Database query.", error: err});
+    }
+
+    if(`${this.lastID}`) {
+      console.log(`A row has been inserted with rowid ${this.lastID}`);
+      res.json({data:{userId: `${this.lastID}`}, message: "Successfully created user"});
+    } else {
+      console.log("Unable to create User");
+      res.json({message: "Unable to create User"});
+    }
+
+  });
+
+  db.close();
+});
+
 
 /* GET users listing. */
 app.get('/sqliteDBRecordsTest', function(req, res, next) {
-  // Comment out this line:
-  //res.send('respond with a resource');
-
-  // And insert something like this instead:
-  // res.json([{
-  // 	id: 1,
-  // 	username: "Raghu"
-  // }, {
-  // 	id: 2,
-  // 	username: "Varma"
-  // }]);
-
-  // DB Running Test
-  // db.serialize(function () {
-  //   db.run('CREATE TABLE testing (info TEXT)')
-  //   var stmt = db.prepare('INSERT INTO testing VALUES (?)')
-  //
-  //   for (var i = 0; i < 10; i++) {
-  //     stmt.run('test- ' + i)
-  //   }
-  //
-  //   stmt.finalize()
-  //
-  //   db.each('SELECT rowid AS id, info FROM testing', function (err, row) {
-  //     console.log(row.id + ': ' + row.info)
-  //   })
-  // })
-  //
-  // db.close()
-
-
-
-  // const book = 'harry potter';
-  // const author = 'J. K. Rowling';
-  //
-  // const data = await db.all(SQL`SELECT author FROM books WHERE name = ${book} AND author = ${author}`);
-  // res.json(data);
 
   db.serialize(() => {
     const playerId = 1;
@@ -241,87 +239,321 @@ app.get('/sqliteDBRecordsTest', function(req, res, next) {
     if (err) {
       console.error(err.message);
     }
-    //console.log('Close the database connection.');
   });
 
 });
 
 
-/* method: post - creating payment. */
-app.post('/createPayments', function(req, res, next) {
+/* method: get payments */
+app.get('/getUserPayments', function(req,res,next) {
 
-  db.serialize(() => {
-    //const id = 1;
-    const username = request.body.username || "Raghu";
-    const type = request.body.paymentType || "Cash";
-    const description = request.body.description || 'Loading Money from CreditCard to Paytm';
-    const balance = request.body.balance || 123.45;
+  var username = req.query.username;
+  startDB();
+  var sql = `select a.id, a.username, b.type, a.description, a.balance, a.lastModified from user_payments a inner join payment_modes b on a.type = b.id where username=?`;
+  db.all(sql, `${username}`, function(err, result){
+    if(err){
+      console.log("Error: ", err);
+      res.json({error: "Unable to fetch data."});
+    }
+
+    if(result === undefined) {
+      res.json({ message:"Records Not Found."});
+    } else {
+      res.json({data:{result}, message:"User Payment list."});
+    }
+  });
+
+  db.close();
+
+});
+
+
+app.get("/getUserPaymentBalance", function(req,res,next) {
+  var userPaymentId = req.query.userPaymentId;
+  var paymentBalance = getUserPaymentBalance(userPaymentId);
+  console.log("paymentBalance: ", paymentBalance);
+  if(paymentBalance == 0){
+    res.json({error: "Unable to fetch data."});
+  } else {
+    res.json({data:paymentBalance});
+  }
+});
+
+function getUserPaymentBalance(userPaymentId) {
+  console.log("userPaymentId: ", userPaymentId);
+  startDB();
+  var sql = `select balance from user_payments where id=?`;
+
+  db.get(sql, `${userPaymentId}`, function(err, result){
+
+    if(err){
+      console.log("Error: ", err);
+      return { error: "Unable to fetch data."}
+      console.log("getUserPaymentBalance Error: ", err);
+    }
+
+    console.log("getUserPaymentBalance result: ", result);
+    if(result === undefined) {
+      return 0
+    } else {
+      return result.balance;
+    }
+  });
+
+  db.close();
+}
+
+/* method: get payment */
+app.get('/getUserPayment', function(req,res,next) {
+
+  var userPaymentId = req.query.userPaymentId;
+
+  startDB();
+
+  var sql = `select a.id, a.username, b.type, a.description, a.balance, a.lastModified from user_payments a inner join payment_modes b on a.type = b.id where a.id=?`;
+
+  db.get(sql, `${userPaymentId}`, function(err, result){
+
+    if(err){
+      console.log("Error: ", err);
+      res.json({error: "Unable to fetch data."});
+    }
+
+    if(result === undefined) {
+      res.json({ message:"Records Not Found."});
+    } else {
+      res.json({data:{result}, message:"User Payment list."});
+    }
+
+  });
+
+  db.close();
+
+});
+
+/* method: post - creating user payment. */
+app.post('/addUserPayment', function(req, res, next) {
+  startDB();
+    const username = req.body.username;
+    const type = req.body.paymentType;
+    const description = req.body.description;
+    const balance = req.body.balance;
     const createdDate = new Date();
     const lastModified = new Date();
-    db.run("INSERT INTO payments (username, type, description, balance, createdDate, lastModified) VALUES (?, ?, ?, ?, ?, ?)", `${username}`, `${type}`, `${description}`, `${balance}`, `${createdDate}`, `${lastModified}`);
-  });
+    db.run(`INSERT INTO user_payments (username, type, description, balance, createdDate, lastModified) VALUES (?, ?, ?, ?, ?, ?)`, [`${username}`, `${type}`, `${description}`, `${balance}`, `${createdDate}`, `${lastModified}`], function(err) {
+        if (err) {
+          console.error("Error: ", err);
+          res.json({ type: "createPayments", result: "Failure", message: err });
+        }
 
-  db.close((err) => {
-    if (err) {
-      console.error(err.message);
-      res.json({ type: "createPayments", result: "Failure", message: err.message });
-    }
-    res.json({type: "createPayments", result: "Success", message: "Successfully Created payment."});
-    startDB();
-  });
+        if(`${this.lastID}`) {
+          console.log(`A row has been inserted with rowid ${this.lastID}`);
+          res.json({data:{userId: `${this.lastID}`}, type: "addUserPayment", result: "Success", message: "Successfully added user payment."});
+        } else {
+          console.log("Unable to create User");
+          res.json({message: "Unable to create user_payments"});
+        }
+
+    });
+
+  db.close();
 
 });
 
-/* method: post - creating payment. */
-app.post('/updatePayments', function(req, res, next) {
+function updateUserPaymentRecord(id, balance) {
+  var lastModified = new Date();
+  db.run(`UPDATE user_payments SET balance=?, lastModified=? where id=?`, balance, lastModified, id, function(err) {
+    if (err) {
+      console.error("Error: ", err);
+      return false;
+    }
+    return true;
+    console.log(`Row(s) updated: ${this.changes}`);
+  });
+}
 
-  db.serialize(() => {
+/* method: post - update payment. */
+app.post('/updateUserPayment', function(req, res, next) {
+  startDB();
     //const id = 1;
-    const id = request.query.userId
-    const username = request.body.username || "Raghu";
-    const type = request.body.paymentType || "Cash";
-    const description = request.body.description || 'Loading Money from CreditCard to Paytm';
-    const balance = request.body.balance || 0.00;
+    const id = req.query.userId
+    const balance = req.body.balance || 0.00;
     const lastModified = new Date();
-    //UPDATE table_name SET column1 = value1, column2 = value2, WHERE condition;
-    db.run("UPDATE payments SET username=${username}, type=${type}, description=${description}, balance, createdDate, lastModified ", `${balance}`, `${createdDate}`, `${lastModified}`);
-  });
+    db.run(`UPDATE user_payments SET balance=${balance}, lastModified=${lastModified} where id=${id}`,[], function(err) {
+      if (err) {
+        console.error("Error: ", err);
+        res.json({ type: "updatePayments", result: "Failure", message: err });
+      }
+      res.json({type: "updatePayments", result: "Success", message: "Successfully Updated payment."});
 
-  db.close((err) => {
-    if (err) {
-      console.error(err.message);
-      res.json({ type: "updatePayments", result: "Failure", message: err.message });
-    }
-    res.json({type: "updatePayments", result: "Success", message: "Successfully Updated payment."});
-    startDB();
-  });
+      console.log(`Row(s) updated: ${this.changes}`);
+    });
+
+  db.close();
 
 });
+
+/* method: get Transactions */
+app.get('/getUserTransactions', function(req,res,next) {
+
+  var username = req.query.username;
+
+  startDB();
+
+ var sql = `select a.id as id, a.username as username, b.type as type, a.description as description, c.type as paymentFrom, d.type as paymentTo, a.amount as amount, a.date as date from transactions a inner join transcation_types b on a.type = b.id inner join (select d.id, d.username, b.type as type, d.description, d.balance, d.lastModified from user_payments d inner join payment_modes b on d.type = b.id where d.username=?) c on a.paymentFrom = c.id inner join (select d.id, d.username, b.type as type, d.description, d.balance, d.lastModified from user_payments d inner join payment_modes b on d.type = b.id where d.username=?) d on a.paymentTo = d.id where a.username=?`;
+
+  db.all(sql, [`${username}`, `${username}`, `${username}`], function(err, result){
+    if(err){
+      console.log("Error: ", err);
+      res.json({error: "Unable to fetch data."});
+    }
+
+    if(result === undefined) {
+      res.json({ message:"Records Not Found."});
+    } else {
+      res.json({data:{result}, message:"User Transaction list."});
+    }
+
+  });
+
+  db.close();
+
+});
+
+
+app.get('/testAsyncProcess', function(req,res,next) {
+  startDB()
+  var asyncOps = [
+    function (done) {
+        console.log('1. Lets print the rows from the database-');
+        db.each("SELECT type FROM payment_modes where id=1", function (err, row) {
+            if (err) return done(err);
+            console.log(row);
+            console.log('All done 1');
+            done(null, row);
+        });
+    },
+    function (done) {
+        console.log("2. Lets print the rows from the database-");
+        db.each("SELECT type FROM transcation_types where id=1", function (err, row) {
+            if (err) return done(err);
+            console.log(row);
+            console.log('All done 2');
+            done(null, row);
+        });
+    }
+  ];
+
+  async.series(asyncOps, function (err, results) {
+
+    if (err) return console.log(err);
+    console.log("testAsyncProcess -- results: ", results);
+    res.json(results)
+  });
+  db.close();
+});
+
 
 /* method: post - creating transcation. */
-app.post('/createTransactions', function(req, res, next) {
+app.post('/createTransaction', function(req, res, next) {
+    const username = req.body.username;
+    const type = req.body.transactionType;
+    const description = req.body.description;
+    const amount = req.body.amount;
+    const paymentFrom = req.body.paymentFrom;
+    const paymentTo = req.body.paymentTo;
+    const createdDate = new Date();
+    const date = new Date();
 
-  db.serialize(() => {
-    //const id = 1;
-    const username = request.body.username || "Raghu";
-    const type = request.body.transactionType || "Credit";
-    const description = request.body.description || 'Loading Money from CreditCard to Paytm';
-    const amount = request.body.amount || 123.45;
-    const accountFrom = request.body.accountFrom || "CreditCard";
-    const accountTo = request.body.accountTo || "PayTm";
-    const createdDate = request.body.createdDate || new Date();
-    const date = new Date(request.body.date || new Date());
-    db.run("INSERT INTO transactions (username, type, description, amount, accountFrom, accountTo, createdDate, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", `${username}`, `${type}`, `${description}`, `${amount}`, `${amountFrom}`, `${amountTo}`, `${createdDate}`, `${date}`);
-  });
+    var paymentFromlastModified = new Date().getTime();
+    var paymentToLastModified = new Date().getTime();
 
-  db.close((err) => {
-    if (err) {
-      console.error(err.message);
-      res.json({ type: "createTransactions", result: "Failure", message: err.message });
-    }
-    res.json({type: "createTransactions", result: "Success", message: "Successfully Created transcation."});
-    startDB();
-  });
+      var paymentFromBalance = 0.0;
+      var paymentToBalance = 0.0;
+
+      var asyncOps = [
+        function (done) {
+            console.log('1. Lets print the rows from the database-');
+            var sql = `select balance from user_payments where id=?`;
+            startDB();
+            db.get(sql, `${paymentFrom}`, function (err, row) {
+                if(err){
+                  console.log("1. Error: ", err);
+                  done(err)
+                }
+                console.log("getUserPaymentBalance result: ", row);
+                console.log(row);
+                done(null, row);
+            });
+          db.close();
+        },
+        function (done) {
+            console.log("2. Lets print the rows from the database-");
+            var sql = `select balance from user_payments where id=?`;
+            startDB();
+            db.get(sql, `${paymentTo}`, function (err, row) {
+                if(err){
+                  console.log("2. Error: ", err);
+                  done(err)
+                }
+                console.log("getUserPaymentBalance result: ", row);
+                console.log(row);
+                console.log('All done 2');
+                done(null, row);
+            });
+            db.close();
+        }
+    ];
+
+    async.series(asyncOps, function (err, results) {
+
+        if (err) return console.log(err);
+        console.log("getUserPaymentBalance -- results: ", results);
+        startDB();
+        db.serialize(() => {
+          console.log("before paymentFromBalance: ", results[0]["balance"]);
+
+          paymentFromBalance = results[0]["balance"] - amount;
+
+          console.log("after paymentFromBalance: ", paymentFromBalance);
+          db.run(`UPDATE user_payments SET balance=${paymentFromBalance}, lastModified=${paymentFromlastModified} where id=${paymentFrom}`,[], function(err) {
+            if (err) {
+              console.error("Error: ", err);
+              return false
+            }
+            console.log(`Row(s) updated: ${this.changes}`);
+          });
+
+          paymentToBalance = results[1]["balance"] + amount;
+
+          db.run(`UPDATE user_payments SET balance=${paymentToBalance}, lastModified=${paymentToLastModified} where id=${paymentTo}`,[], function(err) {
+            if (err) {
+              console.error("Error: ", err);
+              return false
+            }
+            console.log(`Row(s) updated: ${this.changes}`);
+          })
+
+          db.run("INSERT INTO transactions (username, type, description, amount, paymentFrom, paymentTo, createdDate, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [`${username}`, `${type}`, `${description}`, `${amount}`, `${paymentFrom}`, `${paymentTo}`, `${createdDate}`, `${date}`], function(err, result){
+            if (err) {
+              console.error(err);
+              res.json({ type: "createTransactions", result: "Failure", message: err});
+            }
+
+            if(`${this.lastID}`) {
+              console.log(`A row has been inserted with rowid ${this.lastID}`);
+              res.json({data:{userId: `${this.lastID}`}, type: "createTransactions", result: "Success", message: "Successfully Created transcation."});
+            } else {
+              console.log("Unable to create User");
+              res.json({message: "Unable to create user_payments"});
+            }
+
+          });
+
+        });
+
+        db.close();
+    });
 
 });
 
