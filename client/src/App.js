@@ -3,7 +3,8 @@ import { history } from './helpers/history.js';
 import { Router, Route, Switch } from 'react-router-dom';
 import { Provider } from 'react-redux';
 
-import Home from './home/home';
+// import Home from './home/home';
+import Home from './container/Home/Home';
 import Login from './login/Login';
 import { store } from './store.js'
 

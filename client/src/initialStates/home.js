@@ -2,5 +2,6 @@ export default {
   users: [],
   usersList: [],
   transcationsTypes: [],
-  paymentModes: []
+  paymentModes: [],
+  userTransactions:[]
 }

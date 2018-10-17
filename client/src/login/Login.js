@@ -33,7 +33,8 @@ handleSubmit(e) {
 
 render() {
     const {loginFailed} = this.props;
-    const error = loginFailed === undefined ? false : loginFailed;
+    const loginFailedFlag = loginFailed ? 0 : 1;
+    const error = loginFailed === undefined ? 0 : loginFailedFlag;
     return (
       <div>
         <MuiThemeProvider>
@@ -45,7 +46,7 @@ render() {
              hintText="Enter your Username"
              floatingLabelText="Username" style={style}
              onChange = {(event,newValue) => this.setState({username:newValue})}
-             error = {error}
+             error={error}
              errorText = {error ? ' ' : ''}
              />
            <br/>

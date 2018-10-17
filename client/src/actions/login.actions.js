@@ -23,6 +23,7 @@ function login(username, password) {
     axios.post('http://localhost:5000/login', requestOptions.body)
       .then(res => {
         const userDetails = res.data;
+        console.log('Login User Details ', userDetails.data.username, userDetails.data.role);        
           dispatch(success(userDetails));
           history.push('/home');
        })

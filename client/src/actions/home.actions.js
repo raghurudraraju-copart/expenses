@@ -2,7 +2,8 @@ import axios from 'axios';
 
 
 export const homeActions = {
-  loadHomePageData
+  loadHomePageData,
+  loadUserTransactions
 };
 
 function loadHomePageData(){
@@ -17,12 +18,30 @@ function loadHomePageData(){
         const payload = {
           users : users.data , usersList : usersList.data, transcationsTypes : transcationsTypes.data, paymentModes : paymentModes.data
         }
-        dispatch({
-          type: "HOME_PAGE",
-          payload
-        });
+        dispatch(success(payload));
 
     }).catch((err) => {
+      console.log(err);
+    });
+  }
+
+  function success(payload){ return {
+    type: "HOME_PAGE",
+    payload
+  }}
+}
+
+
+function loadUserTransactions(username){
+  return dispatch => {
+   axios.get("http://localhost:5000/getUserTransactions?username="+username).then(res => {
+        const payload = res.data;
+        dispatch({
+            type: "USER_TRANSACTIONS",
+            payload
+          });
+       }
+      ).catch((err) => {
       console.log(err);
     });
   }

@@ -4,7 +4,7 @@ export function login(state = initialState , action){
   switch(action.type){
     case "Login_User":
       return {...state,
-        userDetails : action.payload,
+        userDetails : action.payload.data,
         logginIn : false,
         logged : true
       };
