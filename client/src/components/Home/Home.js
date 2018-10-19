@@ -4,11 +4,11 @@ import Toolbar from '../../components/Navigation/Toolbar/Toolbar';
 import Aux from '../../hoc/Auxilary/Auxilary';
 import { connect } from 'react-redux';
 
-class Home extends Component {
-  render() {
+const home = (props) => {
+  
     return (
         <Aux>
-            <Toolbar username={this.props.username}/>
+            <Toolbar username={props.username}/>
             <div className={classes.UserTransactions}>
                 <div className={classes.Container}>
                     <a className={classes.Tile}>
@@ -28,7 +28,6 @@ class Home extends Component {
         </Aux>
     );
 }
-}
 
 const mapStateToProps = (state) => {
   const { username } = state.login.userDetails;
@@ -37,4 +36,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(Home);
+export default connect(mapStateToProps)(home);
