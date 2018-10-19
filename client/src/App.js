@@ -3,7 +3,7 @@ import { history } from './helpers/history.js';
 import { Router, Route, Switch } from 'react-router-dom';
 import { Provider } from 'react-redux';
 
-import Home from './container/Home/Home.js';
+import Home from './components/Home/Home.js';
 import Login from './container/Login/Login';
 import UserTransactions from './container/UserTransactions/UserTransactions';
 import { store } from './store.js'

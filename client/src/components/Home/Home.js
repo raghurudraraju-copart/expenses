@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import classes from './Home.css';
 import Toolbar from '../../components/Navigation/Toolbar/Toolbar';
 import Aux from '../../hoc/Auxilary/Auxilary';
