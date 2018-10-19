@@ -4,7 +4,8 @@ export function userTransactions(state = initialState, action) {
     case "USER_TRANSACTIONS":
       return {
         ...state,
-        userTransactions: action.payload.result
+        userTransactions: action.payload.result,
+        pages : action.payload.pages
       };
     default:
       return state;

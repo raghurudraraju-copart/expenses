@@ -7,37 +7,20 @@ import ReactTable from 'react-table';
 
 
 class UserTransactions extends Component {
-    state = {
-        open: true,
-        pages: 4
-    };
 
     fetchData = (state, instance) => {
         let username = this.props.username;
-        username="rrv461";
+        username = "vijay912";
         this.props.loadUserTransactions(username, state.pageSize, state.page);
-
-    }
-
-    handleDrawerOpen = () => {
-        this.setState({ open: true });
-    };
-
-    handleDrawerClose = () => {
-        this.setState({ open: false });
-    };
-
-    pageChangeHandler = (pageNum) => {
-        console.log('Page Number' + pageNum)
     }
 
     render() {
+        console.log('Render');
         return (
             <div>
-                <Toolbar username={this.props.username}/>
-                <ReactTable /*showPagination = {false}   */ style={{ marginTop: '75px' }}
-                    pages={this.state.pages}
-                    onPageChange={(pageIndex) => this.pageChangeHandler(pageIndex)}
+                <Toolbar username={this.props.username} />
+                <ReactTable style={{ marginTop: '75px' }}
+                    pages={this.props.pages}
                     className={classes.Table}
                     columns={[
                         { Header: 'Id', accessor: 'id' },
@@ -59,10 +42,10 @@ class UserTransactions extends Component {
 }
 
 const mapStateToProps = (state) => {
-    const { userTransactions } = state.userTransactions;
+    const { userTransactions, pages } = state.userTransactions;
     const { username } = state.login.userDetails;
     return {
-        userTransactions, username
+        userTransactions, username, pages
     }
 }
 

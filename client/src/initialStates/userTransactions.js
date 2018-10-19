@@ -1,3 +1,4 @@
 export default {
-  userTransactions:[]
+  userTransactions:[],
+  pages: -1
 }
