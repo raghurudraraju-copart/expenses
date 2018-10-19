@@ -1,8 +1,9 @@
-.Home{
+.UserTransactions{
     width: 100%;
     text-align: center;
-    margin-bottom: 25px; 
-    background-color: red;   
+    position:fixed;
+    top: 30%;
+
 }
 
 .Container{
@@ -11,4 +12,20 @@
     align-items: left;
     justify-content: center;
     flex-wrap: wrap;
+}
+
+.Tile{
+    box-sizing: border-box !important;
+    background-color: #d6dfe8;
+    background-color:  rgb(156, 188, 212);
+    cursor: pointer;
+    width: 100px;
+    height: 100px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #3d4656;
+    margin: 0 2px 4px;
 }

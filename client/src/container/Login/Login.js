@@ -6,7 +6,7 @@ import AppBar from 'material-ui/AppBar';
 import RaisedButton from 'material-ui/RaisedButton';
 import TextField from 'material-ui/TextField';
 
-import { loginActions } from '../actions/login.actions.js';
+import { loginActions } from '../../actions/login.actions';
 
 class Login extends Component {
 constructor(props){

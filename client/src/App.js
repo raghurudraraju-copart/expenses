@@ -3,9 +3,9 @@ import { history } from './helpers/history.js';
 import { Router, Route, Switch } from 'react-router-dom';
 import { Provider } from 'react-redux';
 
-// import Home from './home/home';
-import Home from './container/Home/Home';
-import Login from './login/Login';
+import Home from './container/Home/Home.js';
+import Login from './container/Login/Login';
+import UserTransactions from './container/UserTransactions/UserTransactions';
 import { store } from './store.js'
 
 import './App.css';
@@ -19,6 +19,7 @@ class App extends Component {
         <Router history = {history}>
           <Switch>
                   <Route path="/home" component={Home} />
+                  <Route path="/userTransactions" component={UserTransactions} />
                   <Route exact path="/" component={Login} />
           </Switch>
         </Router>
