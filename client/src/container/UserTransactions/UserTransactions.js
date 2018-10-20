@@ -10,12 +10,10 @@ class UserTransactions extends Component {
 
     fetchData = (state, instance) => {
         let username = this.props.username;
-        username = "vijay912";
         this.props.loadUserTransactions(username, state.pageSize, state.page);
     }
 
     render() {
-        console.log('Render');
         return (
             <div>
                 <Toolbar username={this.props.username} />

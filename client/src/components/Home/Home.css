@@ -6,6 +6,10 @@
 
 }
 
+.UserTransactions a{
+    text-decoration: none;
+}
+
 .Container{
     display: flex;
     flex-direction: row;
@@ -28,4 +32,8 @@
     align-items: center;
     color: #3d4656;
     margin: 0 2px 4px;
+}
+
+.Tile:hover{
+    transform: scale(1.05);
 }

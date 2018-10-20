@@ -7,24 +7,25 @@ import Home from './components/Home/Home.js';
 import Login from './container/Login/Login';
 import UserTransactions from './container/UserTransactions/UserTransactions';
 import { store } from './store.js'
+import { BrowserRouter } from 'react-router-dom';
 
 import './App.css';
 
 class App extends Component {
 
-  render(){
-    return(
-      <div>
-      <Provider store={store}>
-        <Router history = {history}>
-          <Switch>
-                  <Route path="/home" component={Home} />
-                  <Route path="/userTransactions" component={UserTransactions} />
-                  <Route exact path="/" component={Login} />
-          </Switch>
-        </Router>
-      </Provider>
-      </div>
+  render() {
+    return (
+      <BrowserRouter>
+        <Provider store={store}>
+          <Router history={history}>
+            <Switch>
+              <Route path="/home" component={Home} />
+              <Route path="/userTransactions" component={UserTransactions} />
+              <Route exact path="/" component={Login} />
+            </Switch>
+          </Router>
+        </Provider>
+      </BrowserRouter>
     );
   }
 }

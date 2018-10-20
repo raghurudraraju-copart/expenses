@@ -1,6 +1,4 @@
-import {
-  history
-} from '../helpers/history.js';
+import { history} from '../helpers/history.js';
 import axios from 'axios';
 
 
@@ -23,11 +21,10 @@ function login(username, password) {
     axios.post('http://localhost:5000/login', requestOptions.body)
       .then(res => {
         const userDetails = res.data;
-        console.log('Login User Details ', userDetails.username, userDetails.role);        
-          dispatch(success(userDetails));
-          history.push('/home');
-       })
-      .catch(function(error) {
+        dispatch(success(userDetails));
+        history.push('/home');
+      })
+      .catch(function (error) {
         dispatch(failure());
       });
   }

@@ -3,6 +3,7 @@ import classes from './Home.css';
 import Toolbar from '../../components/Navigation/Toolbar/Toolbar';
 import Aux from '../../hoc/Auxilary/Auxilary';
 import { connect } from 'react-redux';
+import {Link} from 'react-router-dom';
 
 const home = (props) => {
   
@@ -11,9 +12,9 @@ const home = (props) => {
             <Toolbar username={props.username}/>
             <div className={classes.UserTransactions}>
                 <div className={classes.Container}>
-                    <a className={classes.Tile}>
+                    <Link to='/userTransactions' className={classes.Tile}>
                         <div>My Transactions</div>
-                    </a>
+                    </Link>
                     <a className={classes.Tile}>
                         <div>Payments</div>
                     </a>

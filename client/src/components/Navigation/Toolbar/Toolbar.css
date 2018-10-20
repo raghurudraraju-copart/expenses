@@ -7,15 +7,21 @@
     background-color: rgb(0, 188, 212);
     color: white;
     align-items: center;
+    display: flex;
     /* padding: 0 20px; */
     display: flex;
-    /*justify-content: space-between;
+    justify-content: space-between;
     box-sizing: border-box;
-    z-index: 90; */
+    /*z-index: 90; */
 }
 
 .Toolbar span{
     text-align: left;
     float: right;
     padding : 0 20px;
+}
+
+.Logo {
+    height: 100%;
+    /* margin-bottom: 10px; */
 }
