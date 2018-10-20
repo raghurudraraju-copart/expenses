@@ -1,19 +1,27 @@
-import React from 'react';
+import React, { Component } from 'react';
 import classes from './Toolbar.css';
 import Logo from '../../Logo/Logo';
-import { history} from '../../../helpers/history';
+import { withRouter } from 'react-router-dom';
+import Aux from '../../../hoc/Auxilary/Auxilary';
 
-const logoClickedHandler = () => {
-    history.push('/home');
+const toolbar = class extends Component {
+
+    logoClickedHandler = () => {
+       this.props.history.push('/home');
+    }
+
+    render() {
+        return (
+            <Aux>
+                <header className={classes.Toolbar} >
+                    <div className={classes.Logo} onClick={this.logoClickedHandler}>
+                        <Logo />
+                    </div>
+                    <div style={{ width: '100%' }}><span>Welcome {this.props.username}</span></div>
+                </header>
+            </Aux>
+        )
+    }
 }
 
-const toolbar = (props) => (
-    <header className={classes.Toolbar}>
-        <div className={classes.Logo} onClick={logoClickedHandler}>
-            <Logo />
-        </div>
-        <div style={{width:'100%'}}><span>Welcome {props.username}</span></div>
-    </header>
-);
-
-export default toolbar;
+export default withRouter(toolbar);
