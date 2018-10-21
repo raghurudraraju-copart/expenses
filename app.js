@@ -249,16 +249,40 @@ app.get('/getUserPayments', function(req,res,next) {
 
   var username = req.query.username;
 
-  var pageNumber = req.query.pageNumber ? req.query.pageNumber : 1;
+  var pageNumber = req.query.pageNumber ? req.query.pageNumber : 0;
   var pageSize = req.query.pageSize ? req.query.pageSize : 20;
 
-  var recordsFrom = ((pageNumber-1) * pageSize);
+  var recordsFrom = (pageNumber * pageSize);
   console.log("recordsFrom: ", recordsFrom);
   console.log("pageSize: ", pageSize);
 
   startDB();
   var sql = `select a.id, a.username, b.type, a.description, a.balance, a.lastModified from user_payments a inner join payment_modes b on a.type = b.id where username=? LIMIT ?, ?`;
   db.all(sql, [`${username}`, `${recordsFrom}`, `${pageSize}`], function(err, result){
+    if(err){
+      console.log("Error: ", err);
+      res.json({error: "Unable to fetch data."});
+    }
+
+    if(result === undefined) {
+      res.json({ message:"Records Not Found."});
+    } else {
+      res.json({result, message:"User Payment list."});
+    }
+  });
+
+  db.close();
+
+});
+
+/* method: get payments length */
+app.get('/getUserPaymentsLength', function(req,res,next) {
+
+  var username = req.query.username;
+
+  startDB();
+  var sql = `select count(*) as noOfRecords from user_payments where username=?`;
+  db.all(sql, [`${username}`], function(err, result){
     if(err){
       console.log("Error: ", err);
       res.json({error: "Unable to fetch data."});
@@ -405,10 +429,10 @@ app.post('/updateUserPayment', function(req, res, next) {
 app.get('/getUserTransactions', function(req,res,next) {
 
   var username = req.query.username;
-  var pageNumber = req.query.pageNumber ? req.query.pageNumber : 1;
+  var pageNumber = req.query.pageNumber ? req.query.pageNumber : 0;
   var pageSize = req.query.pageSize ? req.query.pageSize : 20;
 
-  var recordsFrom = ((pageNumber-1) * pageSize);
+  var recordsFrom = (pageNumber * pageSize);
 
   startDB();
 
@@ -426,6 +450,30 @@ app.get('/getUserTransactions', function(req,res,next) {
       res.json({result, message:"User Transaction list."});
     }
 
+  });
+
+  db.close();
+
+});
+
+/* method: get transactions length */
+app.get('/getUserTransactionsLength', function(req,res,next) {
+
+  var username = req.query.username;
+
+  startDB();
+  var sql = `select count(*) as noOfRecords from transactions where username=?`;
+  db.all(sql, [`${username}`], function(err, result){
+    if(err){
+      console.log("Error: ", err);
+      res.json({error: "Unable to fetch data."});
+    }
+
+    if(result === undefined) {
+      res.json({ message:"Records Not Found."});
+    } else {
+      res.json({result, message:"User Transactions list."});
+    }
   });
 
   db.close();
