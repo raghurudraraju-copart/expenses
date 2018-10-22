@@ -25,8 +25,9 @@ function startDB(){
 app.get('/usersList', function(req, res, next) {
 
   startDB();
-
-  db.all('SELECT id, username, firstName, lastName, role FROM users', (err, result) => {
+  //var sql = 'SELECT id, username, firstName, lastName FROM users';
+  var sql = `select a.id as id, a.username as username, a.firstName as firstName, a.lastName as lastName, c.type as role from users a inner join user_roles b on a.id = b.user_id inner join roles c on b.role_id = c.id`
+  db.all(sql, (err, result) => {
 
     if(err){
       console.log("usersList Error: ", err);
@@ -37,6 +38,9 @@ app.get('/usersList', function(req, res, next) {
       res.json({ message:"Records Not Found."});
     } else {
       res.json(result);
+      // result.filter((row) => { row.userid
+      //
+      // })
     }
 
   });
@@ -98,7 +102,9 @@ app.get('/users', function(req, res, next) {
 
 app.get('/createDataBaseTables', function(req, res, next) {
   startDB();
-  db.run("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, firstName TEXT, lastName TEXT, password TEXT, role TEXT, createdDate TEXT )");
+  db.run("CREATE TABLE roles ( id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT DEFAULT User, isDefault	INTEGER DEFAULT 0)");
+  db.run("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, firstName TEXT, lastName TEXT, password TEXT, createdDate TEXT )");
+  db.run("CREATE TABLE user_roles ( id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, role_id INTEGER)");
   db.run("CREATE TABLE transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER, username TEXT, description TEXT, paymentFrom INTEGER, paymentTo INTEGER, amount FLOAT, date TEXT, createdDate TEXT )");
   db.run("CREATE TABLE user_payments (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, type INTEGER, description TEXT, balance FLOAT, createdDate TEXT, lastModified TEXT )");
   db.run("CREATE TABLE transaction_types (id	INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT)");
@@ -109,6 +115,9 @@ app.get('/createDataBaseTables', function(req, res, next) {
 
 app.get('/createMasterTableData', function(req, res, next) {
   startDB();
+  db.run("INSERT INTO roles (type, isDefault) VALUES (?, ?)", "Admin", 0);
+  db.run("INSERT INTO roles (type, isDefault) VALUES (?, ?)", "User", 1);
+  db.run("INSERT INTO roles (type, isDefault) VALUES (?, ?)", "Developer", 0);
   db.run("INSERT INTO transaction_types (type) VALUES (?)", "Credit");
   db.run("INSERT INTO transaction_types (type) VALUES (?)", "Debit");
   db.run("INSERT INTO transaction_types (type) VALUES (?)", "Transfer");
@@ -125,6 +134,7 @@ app.get('/createMasterTableData', function(req, res, next) {
 
 app.get('/dropDataBaseTables', function(req, res, next) {
   startDB();
+  db.run("DROP TABLE roles;");
   db.run("DROP TABLE users;");
   db.run("DROP TABLE transactions;");
   db.run("DROP TABLE user_payments;");
@@ -139,10 +149,11 @@ app.post('/login', function(req, res, next) {
   var username = req.body.username;
   var password = req.body.password;
 
-  let sql = `SELECT username, password, role from users where username= ?`;
+  //let sql = `SELECT username, password, role from users where username= ?`;
+  let sql = `select a.id as id, a.password as password, a.username as username, a.firstName as firstName, a.lastName as lastName, c.type as role from users a inner join user_roles b on a.id = b.user_id inner join roles c on b.role_id = c.id where a.username=?`;
 
 // first row only
-db.get(sql, [username], (err, result) => {
+db.all(sql, [username], (err, result) => {
   if(err){
       console.log("Error: ", err);
       res.json({ error:"Unable to execute Database query."});
@@ -150,10 +161,16 @@ db.get(sql, [username], (err, result) => {
 
     if(result === undefined) {
       res.json({ error:"User Not Found."});
-    } else if(password != result.password){
+    } else if(password != result[0].password){
         res.json({ error:"Invalid password."});
     } else {
-      res.json({username:result.username, role:result.role});
+      var rolesArray = [];
+      for(var i= 0; i<= result.length-1; i++){
+        rolesArray.push(result[i].role)
+        if (result.length-1 === i){
+          res.json({username:result[0].username, roles:rolesArray});
+        }
+      }
     }
 
   });
@@ -193,10 +210,9 @@ app.post('/createUser', function(req, res, next) {
   var firstName = req.body.firstName;
   var lastName = req.body.lastName;
   var password = req.body.password;
-  var role = req.body.role;
   var createdDate = new Date();
 
-  db.run(`INSERT INTO users(username, firstName, lastName, password, role, createdDate) VALUES(?, ?, ?, ?, ?, ?)`, [username, firstName, lastName, password, role, createdDate], function(err) {
+  db.run(`INSERT INTO users(username, firstName, lastName, password, createdDate) VALUES(?, ?, ?, ?, ?, ?)`, [username, firstName, lastName, password, role, createdDate], function(err) {
     if(err){
       console.log("Error: ", err);
       res.json({ message:"Unable to execute Database query.", error: err});
