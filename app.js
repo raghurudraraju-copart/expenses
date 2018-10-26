@@ -209,35 +209,13 @@ app.get('/checkUserAvailability', function(req, res, next) {
 // Create user
 app.post('/createUser', function(req, res, next) {
   startDB();
+
   var username = req.body.username;
   var firstName = req.body.firstName;
   var lastName = req.body.lastName;
   var password = req.body.password;
   var createdDate = new Date();
 
-  /*db.run(`INSERT INTO users(username, firstName, lastName, password, createdDate) VALUES(?, ?, ?, ?, ?)`, [username, firstName, lastName, password, createdDate], function(err) {
-    if(err){
-      console.log("Error: ", err);
-      res.json({ message:"Unable to execute Database query.", error: err});
-    }
-
-    if(`${this.lastID}`) {
-      console.log(`A row has been inserted with rowid ${this.lastID}`);
-      res.json({userId: `${this.lastID}`, message: "Successfully created user"});
-    } else {
-      console.log("Unable to create User");
-      res.json({message: "Unable to create User"});
-    }
-
-  });*/
-
-  // const balance = 0;
-  // const lastModified = new Date();
-  // db.run(`INSERT INTO user_payments (username, type, description, balance, createdDate, lastModified) VALUES (?, ?, ?, ?, ?, ?)`, [`${username}`, 5, "Cash", `${balance}`, `${createdDate}`, `${lastModified}`], function(err) { });
-  //
-  // db.run(`INSERT INTO user_payments (username, type, description, balance, createdDate, lastModified) VALUES (?, ?, ?, ?, ?, ?)`, [`${username}`, 7, "Others", `${balance}`, `${createdDate}`, `${lastModified}`], function(err) { });
-
-  /*startDB()*/
   var asyncOps = [
     function (done) {
         console.log('1. Lets print the rows from the database-');
@@ -264,7 +242,6 @@ app.post('/createUser', function(req, res, next) {
     db.run(`INSERT INTO user_payments (username, type, description, balance, createdDate, lastModified) VALUES (?, ?, ?, ?, ?, ?)`, [`${username}`, 7, "Others", `${balance}`, `${createdDate}`, `${lastModified}`], function(err) { });
 
   });
-  /*db.close();*/
 
   db.close();
 });
@@ -274,92 +251,40 @@ app.post('/updateRole', function(req, res, next) {
   var user_id = req.body.user_id;
   var added_roles = req.body.addedRoleIds;
   var deleted_roles = req.body.deletedRoleIds;
-  /*db.run(`INSERT into user_roles(user_id, role_id) VALUES (?, ?)`, [`${user_id}`, `${role_id}`], function(err) {
-    if (err) {
-      console.error("Error: ", err);
-      res.json({ type: "addRole", result: "Failure", message: err });
-    }
-
-    if(`${this.lastID}`) {
-      console.log(`A row has been inserted with rowid ${this.lastID}`);
-      res.json({userId: `${this.lastID}`, type: "addRole", result: "Success", message: "Successfully added user payment."});
-    } else {
-      console.log("Unable to create User");
-      res.json({message: "Unable to add Roles"});
-    }
-  });*/
 
   db.serialize(() => {
 
-
-
-    if( (added_roles && added_roles.length > 0) || (deleted_roles && deleted_roles.length) ) {
+    if( (added_roles && added_roles.length > 0) || (deleted_roles && deleted_roles.length > 0) ) {
         var totalRecords = added_roles.length + deleted_roles.length;
       for(var i = 0; i < totalRecords ; i++) {
         console.log('added_roles', added_roles[i]);
-
-        if( totalRecords === 0 || (added_roles[i] === undefined) ){
-
-        } else if(0) {
-
-        } else if(0) {
-
+        console.log('i-(added_roles.length) ', i, added_roles.length);
+        if( added_roles.length > i && totalRecords-1 != i ) {
+          db.run(`INSERT into user_roles(user_id, role_id) values(?, ?) `, `${user_id}`, `${added_roles[i]}`, function(err) {});
+          console.log('added_roles.length > i');
+        } else if( added_roles.length > i && totalRecords-1 == i ) {
+          db.run(`INSERT into user_roles(user_id, role_id) values(?, ?) `, `${user_id}`, `${added_roles[i]}`, function(err) {});
+          res.json({status_code: 200, message: "Updated roles.!"});
+          console.log('added_roles.length >= i && totalRecords == i');
+        } else if(added_roles.length <= i && deleted_roles[i-(added_roles.length)] && totalRecords-1 != i) {
+          db.run(`DELETE from user_roles where user_id=? and  role_id=?`, `${user_id}`, `${deleted_roles[i-added_roles.length]}`, function(err) {});
+          console.log('added_roles.length < i &&  deleted_roles[i-added_roles.length] && totalRecords != i');
+        } else if( deleted_roles[i- (added_roles.length)] && totalRecords-1 == i ) {
+          db.run(`DELETE from user_roles where user_id=? and  role_id=?`, `${user_id}`, `${deleted_roles[i-added_roles.length]}`, function(err) {});
+          res.json({status_code: 200, message: "Updated roles.!"});
+          console.log('deleted_roles[i-added_roles.length] && totalRecords == i');
         } else {
-
-        }
-
-
-        /*var asyncOps = [
-          function (done) {
-              db.each(`SELECT * FROM user_roles where user_id=? and role_id=?`, `${user_id}`, `${added_roles[i]}`, function (err, row) {
-                  if (err) return done(err);
-                  var row_Data = row ? row : {}
-                  console.log("row_Data: ", row_Data);
-                  console.log('Fetching user_roles');
-                  done(null, row_Data);
-              });
-          }
-        ];
-
-        async.series(asyncOps, function (err, results) {
-
-          if (err) return console.log(err);
-          console.log("added_roles -- results.length: ", results.length);
-
-          for(var j = 0; j < results.length; j++) {
-            console.log('added_roles: ', added_roles, i);
-
-            if(results.length>0) {
-              var statusValue = 1;
-              db.run(`UPDATE user_roles set status=${statusValue} where id=${results[j].id}`, function(err) {
-                console.log("Updated record");
-              });
-            } else {
-              db.run(`INSERT into user_roles(user_id, role_id) values(?, ?) `, `${user_id}`, `${added_roles[i]}`, function(err) {
-                console.log("added new record");
-              });
-            }
-
-          }
-
-        });*/
-
-        if(added_roles.length === i) {
-          res.json({added_roles: added_roles})
+          res.json({status_code: 500, message: "Unable to execute query..!"});
+          console.log('last else');
         }
 
       }
+
+
+    } else {
+      res.json({status_code: 304, message: "No Changes happen so far.!"});
+      console.log('totalRecords === 0');
     }
-
-    /* if(deleted_roles && deleted_roles.length > 0){
-      console.log("deleted_roles: ", deleted_roles);
-      for(var i = 0; i < added_roles.length-1; i++) {
-        db.run('update user_roles set status=0 where user_id = 1 and role_id = 2', [`${user_id}`, `${role_id}`], function(err) {
-
-        })
-
-      res.json({deleted_roles: deleted_roles});
-    }*/
 
   });
 
@@ -404,9 +329,6 @@ app.get('/sqliteDBRecordsTest', function(req, res, next) {
     const playerName = 'Raghu';
     db.run("CREATE TABLE IF NOT EXISTS playlists (id INTEGER, name TEXT)");
     db.run("INSERT INTO playlists (id, name) VALUES (?, ?)", `${playerId}`, `${playerName}`);
-    // db.each(`SELECT PlaylistId as id,
-    //                 Name as name
-    //          FROM playlists`, (err, row) => {
     db.each(`SELECT id, name FROM playlists`, (err, row) => {
       if (err) {
         console.error(err.message);
@@ -664,20 +586,16 @@ app.get('/testAsyncProcess', function(req,res,next) {
   startDB()
   var asyncOps = [
     function (done) {
-        console.log('1. Lets print the rows from the database-');
         db.each("SELECT type FROM payment_modes where id=1", function (err, row) {
             if (err) return done(err);
             console.log(row);
-            console.log('All done 1');
             done(null, row);
         });
     },
     function (done) {
-        console.log("2. Lets print the rows from the database-");
         db.each("SELECT type FROM transaction_types where id=1", function (err, row) {
             if (err) return done(err);
             console.log(row);
-            console.log('All done 2');
             done(null, row);
         });
     }
@@ -712,12 +630,10 @@ app.post('/createTransaction', function(req, res, next) {
 
       var asyncOps = [
         function (done) {
-            console.log('1. Lets print the rows from the database-');
             var sql = `select balance from user_payments where id=?`;
             startDB();
             db.get(sql, `${paymentFrom}`, function (err, row) {
                 if(err){
-                  console.log("1. Error: ", err);
                   done(err)
                 }
                 console.log("getUserPaymentBalance result: ", row);
@@ -727,17 +643,14 @@ app.post('/createTransaction', function(req, res, next) {
           db.close();
         },
         function (done) {
-            console.log("2. Lets print the rows from the database-");
             var sql = `select balance from user_payments where id=?`;
             startDB();
             db.get(sql, `${paymentTo}`, function (err, row) {
                 if(err){
-                  console.log("2. Error: ", err);
                   done(err)
                 }
                 console.log("getUserPaymentBalance result: ", row);
                 console.log(row);
-                console.log('All done 2');
                 done(null, row);
             });
             db.close();
