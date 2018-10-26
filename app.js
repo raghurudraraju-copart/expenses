@@ -38,9 +38,6 @@ app.get('/usersList', function(req, res, next) {
       res.json({ message:"Records Not Found."});
     } else {
       res.json(result);
-      // result.filter((row) => { row.userid
-      //
-      // })
     }
 
   });
@@ -222,7 +219,6 @@ app.post('/createUser', function(req, res, next) {
         db.run(`INSERT INTO users(username, firstName, lastName, password, createdDate) VALUES(?, ?, ?, ?, ?)`, [username, firstName, lastName, password, createdDate], function (err) {
             if (err) return done(err);
             console.log(`${this.lastID}`);
-            console.log('All done 1');
             done(null, `${this.lastID}`);
         });
     }
@@ -257,33 +253,23 @@ app.post('/updateRole', function(req, res, next) {
     if( (added_roles && added_roles.length > 0) || (deleted_roles && deleted_roles.length > 0) ) {
         var totalRecords = added_roles.length + deleted_roles.length;
       for(var i = 0; i < totalRecords ; i++) {
-        console.log('added_roles', added_roles[i]);
-        console.log('i-(added_roles.length) ', i, added_roles.length);
         if( added_roles.length > i && totalRecords-1 != i ) {
           db.run(`INSERT into user_roles(user_id, role_id) values(?, ?) `, `${user_id}`, `${added_roles[i]}`, function(err) {});
-          console.log('added_roles.length > i');
         } else if( added_roles.length > i && totalRecords-1 == i ) {
           db.run(`INSERT into user_roles(user_id, role_id) values(?, ?) `, `${user_id}`, `${added_roles[i]}`, function(err) {});
           res.json({status_code: 200, message: "Updated roles.!"});
-          console.log('added_roles.length >= i && totalRecords == i');
         } else if(added_roles.length <= i && deleted_roles[i-(added_roles.length)] && totalRecords-1 != i) {
           db.run(`DELETE from user_roles where user_id=? and  role_id=?`, `${user_id}`, `${deleted_roles[i-added_roles.length]}`, function(err) {});
-          console.log('added_roles.length < i &&  deleted_roles[i-added_roles.length] && totalRecords != i');
         } else if( deleted_roles[i- (added_roles.length)] && totalRecords-1 == i ) {
           db.run(`DELETE from user_roles where user_id=? and  role_id=?`, `${user_id}`, `${deleted_roles[i-added_roles.length]}`, function(err) {});
           res.json({status_code: 200, message: "Updated roles.!"});
-          console.log('deleted_roles[i-added_roles.length] && totalRecords == i');
         } else {
           res.json({status_code: 500, message: "Unable to execute query..!"});
-          console.log('last else');
         }
-
       }
-
 
     } else {
       res.json({status_code: 304, message: "No Changes happen so far.!"});
-      console.log('totalRecords === 0');
     }
 
   });
@@ -297,7 +283,7 @@ app.get('/getUserRole', function(req, res, next) {
   var user_id = req.query.user_id;
   db.all(`select a.id as user_id, a.username as username, b.role_id as role_id, c.type as role from users a inner join user_roles b on a.id = b.user_id inner join roles c on b.role_id = c.id where a.id=?`, [`${user_id}`], function(err, result) {
     if (err) {
-      console.error("Error: ", err);
+      console.log("Error: ", err);
       res.json({ type: "getUserRole", result: "Failure", message: err });
     }
 
@@ -421,7 +407,6 @@ function getUserPaymentBalance(userPaymentId) {
   db.get(sql, `${userPaymentId}`, function(err, result){
 
     if(err){
-      console.log("Error: ", err);
       return { error: "Unable to fetch data."}
       console.log("getUserPaymentBalance Error: ", err);
     }
@@ -637,7 +622,6 @@ app.post('/createTransaction', function(req, res, next) {
                   done(err)
                 }
                 console.log("getUserPaymentBalance result: ", row);
-                console.log(row);
                 done(null, row);
             });
           db.close();
@@ -650,7 +634,6 @@ app.post('/createTransaction', function(req, res, next) {
                   done(err)
                 }
                 console.log("getUserPaymentBalance result: ", row);
-                console.log(row);
                 done(null, row);
             });
             db.close();
@@ -699,14 +682,10 @@ app.post('/createTransaction', function(req, res, next) {
               console.log("Unable to create User");
               res.json({message: "Unable to create user_payments"});
             }
-
           });
-
         });
-
         db.close();
     });
-
 });
 
 const port = process.env.PORT || 5000;
