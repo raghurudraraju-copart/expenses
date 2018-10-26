@@ -25,8 +25,9 @@ function startDB(){
 app.get('/usersList', function(req, res, next) {
 
   startDB();
-
-  db.all('SELECT id, username, firstName, lastName, role FROM users', (err, result) => {
+  //var sql = 'SELECT id, username, firstName, lastName FROM users';
+  var sql = `select a.id as id, a.username as username, a.firstName as firstName, a.lastName as lastName, c.type as role from users a inner join user_roles b on a.id = b.user_id inner join roles c on b.role_id = c.id`
+  db.all(sql, (err, result) => {
 
     if(err){
       console.log("usersList Error: ", err);
@@ -98,7 +99,9 @@ app.get('/users', function(req, res, next) {
 
 app.get('/createDataBaseTables', function(req, res, next) {
   startDB();
-  db.run("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, firstName TEXT, lastName TEXT, password TEXT, role TEXT, createdDate TEXT )");
+  db.run("CREATE TABLE roles ( id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT DEFAULT User, isDefault	INTEGER DEFAULT 0)");
+  db.run("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, firstName TEXT, lastName TEXT, password TEXT, createdDate TEXT )");
+  db.run("CREATE TABLE user_roles ( id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, role_id INTEGER, status	INTEGER DEFAULT 1)");
   db.run("CREATE TABLE transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER, username TEXT, description TEXT, paymentFrom INTEGER, paymentTo INTEGER, amount FLOAT, date TEXT, createdDate TEXT )");
   db.run("CREATE TABLE user_payments (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, type INTEGER, description TEXT, balance FLOAT, createdDate TEXT, lastModified TEXT )");
   db.run("CREATE TABLE transaction_types (id	INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT)");
@@ -109,6 +112,9 @@ app.get('/createDataBaseTables', function(req, res, next) {
 
 app.get('/createMasterTableData', function(req, res, next) {
   startDB();
+  db.run("INSERT INTO roles (type, isDefault) VALUES (?, ?)", "Admin", 0);
+  db.run("INSERT INTO roles (type, isDefault) VALUES (?, ?)", "User", 1);
+  db.run("INSERT INTO roles (type, isDefault) VALUES (?, ?)", "Developer", 0);
   db.run("INSERT INTO transaction_types (type) VALUES (?)", "Credit");
   db.run("INSERT INTO transaction_types (type) VALUES (?)", "Debit");
   db.run("INSERT INTO transaction_types (type) VALUES (?)", "Transfer");
@@ -125,6 +131,7 @@ app.get('/createMasterTableData', function(req, res, next) {
 
 app.get('/dropDataBaseTables', function(req, res, next) {
   startDB();
+  db.run("DROP TABLE roles;");
   db.run("DROP TABLE users;");
   db.run("DROP TABLE transactions;");
   db.run("DROP TABLE user_payments;");
@@ -139,21 +146,31 @@ app.post('/login', function(req, res, next) {
   var username = req.body.username;
   var password = req.body.password;
 
-  let sql = `SELECT username, password, role from users where username= ?`;
+  //let sql = `SELECT username, password, role from users where username= ?`;
+  let sql = `select a.id as id, a.password as password, a.username as username, a.firstName as firstName, a.lastName as lastName, c.type as role, b.role_id as role_id from users a inner join user_roles b on a.id = b.user_id inner join roles c on b.role_id = c.id where a.username=?`;
 
 // first row only
-db.get(sql, [username], (err, result) => {
+db.all(sql, [username], (err, result) => {
   if(err){
       console.log("Error: ", err);
       res.json({ error:"Unable to execute Database query."});
     }
 
-    if(result === undefined) {
+    if(result === undefined || result.length === 0) {
       res.json({ error:"User Not Found."});
-    } else if(password != result.password){
+    } else if(password != result[0].password){
         res.json({ error:"Invalid password."});
     } else {
-      res.json({username:result.username, role:result.role});
+      var rolesArray = [];
+      var rolesIdArray = [];
+      for(var i= 0; i<= result.length-1; i++){
+        var objRole = {role_id: result[i].role_id, role: result[i].role};
+        rolesArray.push(objRole);
+        if (result.length-1 === i){
+          var userDetails = {id: result[0].id, username: result[0].username};
+          res.json({userDetails: userDetails, userRoles: rolesArray});
+        }
+      }
     }
 
   });
@@ -189,29 +206,103 @@ app.get('/checkUserAvailability', function(req, res, next) {
 // Create user
 app.post('/createUser', function(req, res, next) {
   startDB();
+
   var username = req.body.username;
   var firstName = req.body.firstName;
   var lastName = req.body.lastName;
   var password = req.body.password;
-  var role = req.body.role;
   var createdDate = new Date();
 
-  db.run(`INSERT INTO users(username, firstName, lastName, password, role, createdDate) VALUES(?, ?, ?, ?, ?, ?)`, [username, firstName, lastName, password, role, createdDate], function(err) {
-    if(err){
-      console.log("Error: ", err);
-      res.json({ message:"Unable to execute Database query.", error: err});
+  var asyncOps = [
+    function (done) {
+        console.log('1. Lets print the rows from the database-');
+        db.run(`INSERT INTO users(username, firstName, lastName, password, createdDate) VALUES(?, ?, ?, ?, ?)`, [username, firstName, lastName, password, createdDate], function (err) {
+            if (err) return done(err);
+            console.log(`${this.lastID}`);
+            done(null, `${this.lastID}`);
+        });
     }
+  ];
 
-    if(`${this.lastID}`) {
-      console.log(`A row has been inserted with rowid ${this.lastID}`);
-      res.json({userId: `${this.lastID}`, message: "Successfully created user"});
+  async.series(asyncOps, function (err, results) {
+
+    if (err) return console.log(err);
+    console.log("createUser -- results: ", results);
+    res.json(results)
+    db.run(`INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)`, [parseInt(results[0]), 2], function(err) { });
+
+    const balance = 0;
+    const lastModified = new Date();
+    db.run(`INSERT INTO user_payments (username, type, description, balance, createdDate, lastModified) VALUES (?, ?, ?, ?, ?, ?)`, [`${username}`, 5, "Cash", `${balance}`, `${createdDate}`, `${lastModified}`], function(err) { });
+
+    db.run(`INSERT INTO user_payments (username, type, description, balance, createdDate, lastModified) VALUES (?, ?, ?, ?, ?, ?)`, [`${username}`, 7, "Others", `${balance}`, `${createdDate}`, `${lastModified}`], function(err) { });
+
+  });
+
+  db.close();
+});
+
+app.post('/updateRole', function(req, res, next) {
+  startDB();
+  var user_id = req.body.user_id;
+  var added_roles = req.body.addedRoleIds;
+  var deleted_roles = req.body.deletedRoleIds;
+
+  db.serialize(() => {
+
+    if( (added_roles && added_roles.length > 0) || (deleted_roles && deleted_roles.length > 0) ) {
+        var totalRecords = added_roles.length + deleted_roles.length;
+      for(var i = 0; i < totalRecords ; i++) {
+        if( added_roles.length > i && totalRecords-1 != i ) {
+          db.run(`INSERT into user_roles(user_id, role_id) values(?, ?) `, `${user_id}`, `${added_roles[i]}`, function(err) {});
+        } else if( added_roles.length > i && totalRecords-1 == i ) {
+          db.run(`INSERT into user_roles(user_id, role_id) values(?, ?) `, `${user_id}`, `${added_roles[i]}`, function(err) {});
+          res.json({status_code: 200, message: "Updated roles.!"});
+        } else if(added_roles.length <= i && deleted_roles[i-(added_roles.length)] && totalRecords-1 != i) {
+          db.run(`DELETE from user_roles where user_id=? and  role_id=?`, `${user_id}`, `${deleted_roles[i-added_roles.length]}`, function(err) {});
+        } else if( deleted_roles[i- (added_roles.length)] && totalRecords-1 == i ) {
+          db.run(`DELETE from user_roles where user_id=? and  role_id=?`, `${user_id}`, `${deleted_roles[i-added_roles.length]}`, function(err) {});
+          res.json({status_code: 200, message: "Updated roles.!"});
+        } else {
+          res.json({status_code: 500, message: "Unable to execute query..!"});
+        }
+      }
+
     } else {
-      console.log("Unable to create User");
-      res.json({message: "Unable to create User"});
+      res.json({status_code: 304, message: "No Changes happen so far.!"});
     }
 
   });
 
+  db.close();
+});
+
+
+app.get('/getUserRole', function(req, res, next) {
+  startDB();
+  var user_id = req.query.user_id;
+  db.all(`select a.id as user_id, a.username as username, b.role_id as role_id, c.type as role from users a inner join user_roles b on a.id = b.user_id inner join roles c on b.role_id = c.id where a.id=?`, [`${user_id}`], function(err, result) {
+    if (err) {
+      console.log("Error: ", err);
+      res.json({ type: "getUserRole", result: "Failure", message: err });
+    }
+
+    if(result === undefined || result.length === 0) {
+      res.json({ error:"User Not Found."});
+    } else {
+      var rolesArray = [];
+      var rolesIdArray = [];
+      for(var i= 0; i<= result.length-1; i++){
+        var objRole = {role_id: result[i].role_id, role: result[i].role};
+        rolesArray.push(objRole);
+        if (result.length-1 === i){
+          var userDetails = {id: result[0].user_id, username: result[0].username};
+          res.json({userDetails: userDetails, userRoles: rolesArray});
+        }
+      }
+    }
+
+  });
   db.close();
 });
 
@@ -224,9 +315,6 @@ app.get('/sqliteDBRecordsTest', function(req, res, next) {
     const playerName = 'Raghu';
     db.run("CREATE TABLE IF NOT EXISTS playlists (id INTEGER, name TEXT)");
     db.run("INSERT INTO playlists (id, name) VALUES (?, ?)", `${playerId}`, `${playerName}`);
-    // db.each(`SELECT PlaylistId as id,
-    //                 Name as name
-    //          FROM playlists`, (err, row) => {
     db.each(`SELECT id, name FROM playlists`, (err, row) => {
       if (err) {
         console.error(err.message);
@@ -249,16 +337,40 @@ app.get('/getUserPayments', function(req,res,next) {
 
   var username = req.query.username;
 
-  var pageNumber = req.query.pageNumber ? req.query.pageNumber : 1;
+  var pageNumber = req.query.pageNumber ? req.query.pageNumber : 0;
   var pageSize = req.query.pageSize ? req.query.pageSize : 20;
 
-  var recordsFrom = ((pageNumber-1) * pageSize);
+  var recordsFrom = (pageNumber * pageSize);
   console.log("recordsFrom: ", recordsFrom);
   console.log("pageSize: ", pageSize);
 
   startDB();
   var sql = `select a.id, a.username, b.type, a.description, a.balance, a.lastModified from user_payments a inner join payment_modes b on a.type = b.id where username=? LIMIT ?, ?`;
   db.all(sql, [`${username}`, `${recordsFrom}`, `${pageSize}`], function(err, result){
+    if(err){
+      console.log("Error: ", err);
+      res.json({error: "Unable to fetch data."});
+    }
+
+    if(result === undefined) {
+      res.json({ message:"Records Not Found."});
+    } else {
+      res.json({result, message:"User Payment list."});
+    }
+  });
+
+  db.close();
+
+});
+
+/* method: get payments length */
+app.get('/getUserPaymentsLength', function(req,res,next) {
+
+  var username = req.query.username;
+
+  startDB();
+  var sql = `select count(*) as noOfRecords from user_payments where username=?`;
+  db.all(sql, [`${username}`], function(err, result){
     if(err){
       console.log("Error: ", err);
       res.json({error: "Unable to fetch data."});
@@ -295,7 +407,6 @@ function getUserPaymentBalance(userPaymentId) {
   db.get(sql, `${userPaymentId}`, function(err, result){
 
     if(err){
-      console.log("Error: ", err);
       return { error: "Unable to fetch data."}
       console.log("getUserPaymentBalance Error: ", err);
     }
@@ -405,14 +516,14 @@ app.post('/updateUserPayment', function(req, res, next) {
 app.get('/getUserTransactions', function(req,res,next) {
 
   var username = req.query.username;
-  var pageNumber = req.query.pageNumber ? req.query.pageNumber : 1;
+  var pageNumber = req.query.pageNumber ? req.query.pageNumber : 0;
   var pageSize = req.query.pageSize ? req.query.pageSize : 20;
 
-  var recordsFrom = ((pageNumber-1) * pageSize);
+  var recordsFrom = (pageNumber * pageSize);
 
   startDB();
 
- var sql = `select a.id as id, a.username as username, b.type as type, a.description as description, c.type as paymentFrom, d.type as paymentTo, a.amount as amount, a.date as date from transactions a inner join transaction_types b on a.type = b.id inner join (select d.id, d.username, b.type as type, d.description, d.balance, d.lastModified from user_payments d inner join payment_modes b on d.type = b.id where d.username=?) c on a.paymentFrom = c.id inner join (select d.id, d.username, b.type as type, d.description, d.balance, d.lastModified from user_payments d inner join payment_modes b on d.type = b.id where d.username=?) d on a.paymentTo = d.id where a.username=? LIMIT ?, ?`;
+ var sql = `select a.id as id, a.username as username, b.type as type, a.description as description, c.type as paymentFrom, d.type as paymentTo, a.amount as amount, a.date as date from transactions a inner join transaction_types b on a.type = b.id inner join (select d.id, d.username, b.type as type, d.description, d.balance, d.lastModified from user_payments d inner join payment_modes b on d.type = b.id where d.username=?) c on a.paymentFrom = c.id inner join (select d.id, d.username, b.type as type, d.description, d.balance, d.lastModified from user_payments d inner join payment_modes b on d.type = b.id where d.username=?) d on a.paymentTo = d.id where a.username=? order By id desc LIMIT ?, ?`;
 
   db.all(sql, [`${username}`, `${username}`, `${username}`, `${recordsFrom}`, `${pageSize}`], function(err, result){
     if(err){
@@ -432,25 +543,44 @@ app.get('/getUserTransactions', function(req,res,next) {
 
 });
 
+/* method: get transactions length */
+app.get('/getUserTransactionsLength', function(req,res,next) {
+
+  var username = req.query.username;
+
+  startDB();
+  var sql = `select count(*) as noOfRecords from transactions where username=?`;
+  db.all(sql, [`${username}`], function(err, result){
+    if(err){
+      console.log("Error: ", err);
+      res.json({error: "Unable to fetch data."});
+    }
+
+    if(result === undefined) {
+      res.json({ message:"Records Not Found."});
+    } else {
+      res.json({result, message:"User Transactions list."});
+    }
+  });
+
+  db.close();
+
+});
 
 app.get('/testAsyncProcess', function(req,res,next) {
   startDB()
   var asyncOps = [
     function (done) {
-        console.log('1. Lets print the rows from the database-');
         db.each("SELECT type FROM payment_modes where id=1", function (err, row) {
             if (err) return done(err);
             console.log(row);
-            console.log('All done 1');
             done(null, row);
         });
     },
     function (done) {
-        console.log("2. Lets print the rows from the database-");
         db.each("SELECT type FROM transaction_types where id=1", function (err, row) {
             if (err) return done(err);
             console.log(row);
-            console.log('All done 2');
             done(null, row);
         });
     }
@@ -485,32 +615,25 @@ app.post('/createTransaction', function(req, res, next) {
 
       var asyncOps = [
         function (done) {
-            console.log('1. Lets print the rows from the database-');
             var sql = `select balance from user_payments where id=?`;
             startDB();
             db.get(sql, `${paymentFrom}`, function (err, row) {
                 if(err){
-                  console.log("1. Error: ", err);
                   done(err)
                 }
                 console.log("getUserPaymentBalance result: ", row);
-                console.log(row);
                 done(null, row);
             });
           db.close();
         },
         function (done) {
-            console.log("2. Lets print the rows from the database-");
             var sql = `select balance from user_payments where id=?`;
             startDB();
             db.get(sql, `${paymentTo}`, function (err, row) {
                 if(err){
-                  console.log("2. Error: ", err);
                   done(err)
                 }
                 console.log("getUserPaymentBalance result: ", row);
-                console.log(row);
-                console.log('All done 2');
                 done(null, row);
             });
             db.close();
@@ -559,14 +682,10 @@ app.post('/createTransaction', function(req, res, next) {
               console.log("Unable to create User");
               res.json({message: "Unable to create user_payments"});
             }
-
           });
-
         });
-
         db.close();
     });
-
 });
 
 const port = process.env.PORT || 5000;
