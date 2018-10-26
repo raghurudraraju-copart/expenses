@@ -104,7 +104,7 @@ app.get('/createDataBaseTables', function(req, res, next) {
   startDB();
   db.run("CREATE TABLE roles ( id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT DEFAULT User, isDefault	INTEGER DEFAULT 0)");
   db.run("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, firstName TEXT, lastName TEXT, password TEXT, createdDate TEXT )");
-  db.run("CREATE TABLE user_roles ( id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, role_id INTEGER)");
+  db.run("CREATE TABLE user_roles ( id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, role_id INTEGER, status	INTEGER DEFAULT 1)");
   db.run("CREATE TABLE transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER, username TEXT, description TEXT, paymentFrom INTEGER, paymentTo INTEGER, amount FLOAT, date TEXT, createdDate TEXT )");
   db.run("CREATE TABLE user_payments (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, type INTEGER, description TEXT, balance FLOAT, createdDate TEXT, lastModified TEXT )");
   db.run("CREATE TABLE transaction_types (id	INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT)");
@@ -150,7 +150,7 @@ app.post('/login', function(req, res, next) {
   var password = req.body.password;
 
   //let sql = `SELECT username, password, role from users where username= ?`;
-  let sql = `select a.id as id, a.password as password, a.username as username, a.firstName as firstName, a.lastName as lastName, c.type as role from users a inner join user_roles b on a.id = b.user_id inner join roles c on b.role_id = c.id where a.username=?`;
+  let sql = `select a.id as id, a.password as password, a.username as username, a.firstName as firstName, a.lastName as lastName, c.type as role, b.role_id as role_id from users a inner join user_roles b on a.id = b.user_id inner join roles c on b.role_id = c.id where a.username=?`;
 
 // first row only
 db.all(sql, [username], (err, result) => {
@@ -159,16 +159,19 @@ db.all(sql, [username], (err, result) => {
       res.json({ error:"Unable to execute Database query."});
     }
 
-    if(result === undefined) {
+    if(result === undefined || result.length === 0) {
       res.json({ error:"User Not Found."});
     } else if(password != result[0].password){
         res.json({ error:"Invalid password."});
     } else {
       var rolesArray = [];
+      var rolesIdArray = [];
       for(var i= 0; i<= result.length-1; i++){
-        rolesArray.push(result[i].role)
+        var objRole = {role_id: result[i].role_id, role: result[i].role};
+        rolesArray.push(objRole);
         if (result.length-1 === i){
-          res.json({username:result[0].username, roles:rolesArray});
+          var userDetails = {id: result[0].id, username: result[0].username};
+          res.json({userDetails: userDetails, userRoles: rolesArray});
         }
       }
     }
@@ -212,7 +215,7 @@ app.post('/createUser', function(req, res, next) {
   var password = req.body.password;
   var createdDate = new Date();
 
-  db.run(`INSERT INTO users(username, firstName, lastName, password, createdDate) VALUES(?, ?, ?, ?, ?, ?)`, [username, firstName, lastName, password, role, createdDate], function(err) {
+  /*db.run(`INSERT INTO users(username, firstName, lastName, password, createdDate) VALUES(?, ?, ?, ?, ?)`, [username, firstName, lastName, password, createdDate], function(err) {
     if(err){
       console.log("Error: ", err);
       res.json({ message:"Unable to execute Database query.", error: err});
@@ -226,8 +229,166 @@ app.post('/createUser', function(req, res, next) {
       res.json({message: "Unable to create User"});
     }
 
-  });
+  });*/
 
+  // const balance = 0;
+  // const lastModified = new Date();
+  // db.run(`INSERT INTO user_payments (username, type, description, balance, createdDate, lastModified) VALUES (?, ?, ?, ?, ?, ?)`, [`${username}`, 5, "Cash", `${balance}`, `${createdDate}`, `${lastModified}`], function(err) { });
+  //
+  // db.run(`INSERT INTO user_payments (username, type, description, balance, createdDate, lastModified) VALUES (?, ?, ?, ?, ?, ?)`, [`${username}`, 7, "Others", `${balance}`, `${createdDate}`, `${lastModified}`], function(err) { });
+
+  /*startDB()*/
+  var asyncOps = [
+    function (done) {
+        console.log('1. Lets print the rows from the database-');
+        db.run(`INSERT INTO users(username, firstName, lastName, password, createdDate) VALUES(?, ?, ?, ?, ?)`, [username, firstName, lastName, password, createdDate], function (err) {
+            if (err) return done(err);
+            console.log(`${this.lastID}`);
+            console.log('All done 1');
+            done(null, `${this.lastID}`);
+        });
+    }
+  ];
+
+  async.series(asyncOps, function (err, results) {
+
+    if (err) return console.log(err);
+    console.log("createUser -- results: ", results);
+    res.json(results)
+    db.run(`INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)`, [parseInt(results[0]), 2], function(err) { });
+
+    const balance = 0;
+    const lastModified = new Date();
+    db.run(`INSERT INTO user_payments (username, type, description, balance, createdDate, lastModified) VALUES (?, ?, ?, ?, ?, ?)`, [`${username}`, 5, "Cash", `${balance}`, `${createdDate}`, `${lastModified}`], function(err) { });
+
+    db.run(`INSERT INTO user_payments (username, type, description, balance, createdDate, lastModified) VALUES (?, ?, ?, ?, ?, ?)`, [`${username}`, 7, "Others", `${balance}`, `${createdDate}`, `${lastModified}`], function(err) { });
+
+  });
+  /*db.close();*/
+
+  db.close();
+});
+
+app.post('/updateRole', function(req, res, next) {
+  startDB();
+  var user_id = req.body.user_id;
+  var added_roles = req.body.addedRoleIds;
+  var deleted_roles = req.body.deletedRoleIds;
+  /*db.run(`INSERT into user_roles(user_id, role_id) VALUES (?, ?)`, [`${user_id}`, `${role_id}`], function(err) {
+    if (err) {
+      console.error("Error: ", err);
+      res.json({ type: "addRole", result: "Failure", message: err });
+    }
+
+    if(`${this.lastID}`) {
+      console.log(`A row has been inserted with rowid ${this.lastID}`);
+      res.json({userId: `${this.lastID}`, type: "addRole", result: "Success", message: "Successfully added user payment."});
+    } else {
+      console.log("Unable to create User");
+      res.json({message: "Unable to add Roles"});
+    }
+  });*/
+
+  db.serialize(() => {
+
+
+
+    if( (added_roles && added_roles.length > 0) || (deleted_roles && deleted_roles.length) ) {
+        var totalRecords = added_roles.length + deleted_roles.length;
+      for(var i = 0; i < totalRecords ; i++) {
+        console.log('added_roles', added_roles[i]);
+
+        if( totalRecords === 0 || (added_roles[i] === undefined) ){
+
+        } else if() {
+
+        } else if() {
+
+        } else
+
+        /*var asyncOps = [
+          function (done) {
+              db.each(`SELECT * FROM user_roles where user_id=? and role_id=?`, `${user_id}`, `${added_roles[i]}`, function (err, row) {
+                  if (err) return done(err);
+                  var row_Data = row ? row : {}
+                  console.log("row_Data: ", row_Data);
+                  console.log('Fetching user_roles');
+                  done(null, row_Data);
+              });
+          }
+        ];
+
+        async.series(asyncOps, function (err, results) {
+
+          if (err) return console.log(err);
+          console.log("added_roles -- results.length: ", results.length);
+
+          for(var j = 0; j < results.length; j++) {
+            console.log('added_roles: ', added_roles, i);
+
+            if(results.length>0) {
+              var statusValue = 1;
+              db.run(`UPDATE user_roles set status=${statusValue} where id=${results[j].id}`, function(err) {
+                console.log("Updated record");
+              });
+            } else {
+              db.run(`INSERT into user_roles(user_id, role_id) values(?, ?) `, `${user_id}`, `${added_roles[i]}`, function(err) {
+                console.log("added new record");
+              });
+            }
+
+          }
+
+        });*/
+
+        if(added_roles.length === i) {
+          res.json({added_roles: added_roles})
+        }
+
+      }
+    }
+
+    /*if(deleted_roles && deleted_roles.length > 0){
+      console.log("deleted_roles: ", deleted_roles);
+      /*for(var i = 0; i < added_roles.length-1; i++) {
+        db.run('update user_roles set status=0 where user_id = 1 and role_id = 2', [`${user_id}`, `${role_id}`], function(err) {
+
+        })*/
+
+      //res.json({deleted_roles: deleted_roles});
+    }
+
+  });*/
+
+  db.close();
+});
+
+
+app.get('/getUserRole', function(req, res, next) {
+  startDB();
+  var user_id = req.query.user_id;
+  db.all(`select a.id as user_id, a.username as username, b.role_id as role_id, c.type as role from users a inner join user_roles b on a.id = b.user_id inner join roles c on b.role_id = c.id where a.id=?`, [`${user_id}`], function(err, result) {
+    if (err) {
+      console.error("Error: ", err);
+      res.json({ type: "getUserRole", result: "Failure", message: err });
+    }
+
+    if(result === undefined || result.length === 0) {
+      res.json({ error:"User Not Found."});
+    } else {
+      var rolesArray = [];
+      var rolesIdArray = [];
+      for(var i= 0; i<= result.length-1; i++){
+        var objRole = {role_id: result[i].role_id, role: result[i].role};
+        rolesArray.push(objRole);
+        if (result.length-1 === i){
+          var userDetails = {id: result[0].user_id, username: result[0].username};
+          res.json({userDetails: userDetails, userRoles: rolesArray});
+        }
+      }
+    }
+
+  });
   db.close();
 });
 
@@ -452,7 +613,7 @@ app.get('/getUserTransactions', function(req,res,next) {
 
   startDB();
 
- var sql = `select a.id as id, a.username as username, b.type as type, a.description as description, c.type as paymentFrom, d.type as paymentTo, a.amount as amount, a.date as date from transactions a inner join transaction_types b on a.type = b.id inner join (select d.id, d.username, b.type as type, d.description, d.balance, d.lastModified from user_payments d inner join payment_modes b on d.type = b.id where d.username=?) c on a.paymentFrom = c.id inner join (select d.id, d.username, b.type as type, d.description, d.balance, d.lastModified from user_payments d inner join payment_modes b on d.type = b.id where d.username=?) d on a.paymentTo = d.id where a.username=? LIMIT ?, ?`;
+ var sql = `select a.id as id, a.username as username, b.type as type, a.description as description, c.type as paymentFrom, d.type as paymentTo, a.amount as amount, a.date as date from transactions a inner join transaction_types b on a.type = b.id inner join (select d.id, d.username, b.type as type, d.description, d.balance, d.lastModified from user_payments d inner join payment_modes b on d.type = b.id where d.username=?) c on a.paymentFrom = c.id inner join (select d.id, d.username, b.type as type, d.description, d.balance, d.lastModified from user_payments d inner join payment_modes b on d.type = b.id where d.username=?) d on a.paymentTo = d.id where a.username=? order By id desc LIMIT ?, ?`;
 
   db.all(sql, [`${username}`, `${username}`, `${username}`, `${recordsFrom}`, `${pageSize}`], function(err, result){
     if(err){
@@ -495,7 +656,6 @@ app.get('/getUserTransactionsLength', function(req,res,next) {
   db.close();
 
 });
-
 
 app.get('/testAsyncProcess', function(req,res,next) {
   startDB()
