@@ -300,11 +300,14 @@ app.post('/updateRole', function(req, res, next) {
 
         if( totalRecords === 0 || (added_roles[i] === undefined) ){
 
-        } else if() {
+        } else if(0) {
 
-        } else if() {
+        } else if(0) {
 
-        } else
+        } else {
+
+        }
+
 
         /*var asyncOps = [
           function (done) {
@@ -348,17 +351,17 @@ app.post('/updateRole', function(req, res, next) {
       }
     }
 
-    /*if(deleted_roles && deleted_roles.length > 0){
+    /* if(deleted_roles && deleted_roles.length > 0){
       console.log("deleted_roles: ", deleted_roles);
-      /*for(var i = 0; i < added_roles.length-1; i++) {
+      for(var i = 0; i < added_roles.length-1; i++) {
         db.run('update user_roles set status=0 where user_id = 1 and role_id = 2', [`${user_id}`, `${role_id}`], function(err) {
 
-        })*/
+        })
 
-      //res.json({deleted_roles: deleted_roles});
-    }
+      res.json({deleted_roles: deleted_roles});
+    }*/
 
-  });*/
+  });
 
   db.close();
 });
