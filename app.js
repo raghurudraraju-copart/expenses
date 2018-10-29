@@ -559,7 +559,7 @@ app.get('/getUserTransactionsLength', function(req,res,next) {
     if(result === undefined) {
       res.json({ message:"Records Not Found."});
     } else {
-      res.json({result, message:"User Transactions list."});
+      res.json({noOfRecords: result[0]["noOfRecords"], message:"User Transactions list."});
     }
   });
 
