@@ -7,7 +7,16 @@ import Aux from '../../../hoc/Auxilary/Auxilary';
 const toolbar = class extends Component {
 
     logoClickedHandler = () => {
+      if(!this.props.username) {
+        this.props.history.push('/');
+      } else{
        this.props.history.push('/home');
+     }
+    }
+
+    logOutHandler = () => {
+      this.props.history.push('/');
+    }
     }
 
     render() {
@@ -17,7 +26,7 @@ const toolbar = class extends Component {
                     <div className={classes.Logo} onClick={this.logoClickedHandler}>
                         <Logo />
                     </div>
-                    <div style={{ width: '100%' }}><span>Welcome {this.props.username}</span></div>
+                    <div style={{ width: '100%' }}><span>Welcome {this.props.username}</span> { this.props.username && <span style={{cursor: 'pointer'}} onClick={this.logOutHandler}>Logout</span>}</div>
                 </header>
             </Aux>
         )
