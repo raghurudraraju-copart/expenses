@@ -57,7 +57,7 @@ class CreateTransaction extends Component {
         });
 
         const paymentModeOptions = this.props.paymentModes.map(paymentMode => {
-            return (<option key={paymentMode.id} value={paymentMode.id}>{paymentMode.type}</option>)
+            return (<option key={paymentMode.id} value={paymentMode.id}>{paymentMode.description}</option>)
         });
 
         return (
