@@ -1,6 +1,7 @@
 var express = require('express');
 var sqlite3 = require('sqlite3').verbose()
 var async = require('async');
+var cors = require('cors');
 
 const bodyParser = require('body-parser');
 
@@ -8,6 +9,8 @@ var router = express.Router();
 
 var app = express();
 
+// Then use it before your routes are set up:
+app.use(cors());
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
