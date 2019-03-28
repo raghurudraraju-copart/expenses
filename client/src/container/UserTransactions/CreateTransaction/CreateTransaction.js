@@ -46,7 +46,7 @@ class CreateTransaction extends Component {
         if(!newProps.show){
             this.setState({
                 transaction: {...this.DEFAULT_STATE}
-            }) 
+            })
         }
     }
 
@@ -62,7 +62,7 @@ class CreateTransaction extends Component {
 
         return (
             <div className={classes.CreateTransaction}>
-                <h4>Add New Transaction</h4>
+                <h2>Add New Transaction</h2>
                 <form onSubmit={this.createTransactionHandler}>
                     <div className={classes.Input}>
                         <label className={classes.Label}>Amount</label>
@@ -71,32 +71,47 @@ class CreateTransaction extends Component {
                             onChange={this.inputChangedHandler}
                         />
                     </div>
-                    <input className={classes.InputElement} type="text"
-                        name="description"
-                        placeholder="Description"
-                        onChange={this.inputChangedHandler}
-                        value={this.state.transaction.description} />
-                    <select name="transactionType"
-                        className={classes.InputElement}
-                        onChange={this.inputChangedHandler}
-                        value={this.state.transaction.transactionType}>
-                        {transactionTypeOptions}
-                    </select>
-                    <select name="paymentFrom"
-                        className={classes.InputElement}
-                        onChange={this.inputChangedHandler}
-                        value={this.state.transaction.paymentFrom}>
-                        <option key="0" value="0">Select</option>
-                        {paymentModeOptions}
-                    </select>
-                    <select name="paymentTo"
-                        className={classes.InputElement}
-                        onChange={this.inputChangedHandler}
-                        value={this.state.transaction.paymentTo}>
-                        <option key="0" value="0">Select</option>
-                        {paymentModeOptions}
-                    </select>
-                    <Button btnType="Success">Add Transaction</Button>
+                    <div className={classes.Input}>
+                        <label className={classes.Label}>Description</label>
+                        <input className={classes.InputElement} type="text"
+                            name="description"
+                            placeholder="Description"
+                            onChange={this.inputChangedHandler}
+                            value={this.state.transaction.description}
+                        />
+                    </div>
+                    <div className={classes.Input}>
+                        <label className={classes.Label}>Transaction Type</label>
+                        <select name="transactionType"
+                            className={classes.InputElement}
+                            onChange={this.inputChangedHandler}
+                            value={this.state.transaction.transactionType}>
+                            {transactionTypeOptions}
+                        </select>
+                    </div>
+                    <div className={classes.Input}>
+                        <label className={classes.Label}>Payment From</label>
+                        <select name="paymentFrom"
+                            className={classes.InputElement}
+                            onChange={this.inputChangedHandler}
+                            value={this.state.transaction.paymentFrom}>
+                            <option key="0" value="0">Select</option>
+                            {paymentModeOptions}
+                        </select>
+                    </div>
+                    <div className={classes.Input}>
+                        <label className={classes.Label}>Payment To</label>
+                        <select name="paymentTo"
+                            className={classes.InputElement}
+                            onChange={this.inputChangedHandler}
+                            value={this.state.transaction.paymentTo}>
+                            <option key="0" value="0">Select</option>
+                            {paymentModeOptions}
+                        </select>
+                    </div>
+                    <div className={classes.buttons}>
+                      <Button btnType="Success">Add Transaction</Button>
+                    </div>
                 </form>
             </div>
         );
