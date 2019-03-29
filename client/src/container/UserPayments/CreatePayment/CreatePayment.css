@@ -1,0 +1,44 @@
+.CreatePayment{
+    margin: 20px auto;
+    text-align: center;
+    box-shadow: 0 2px 3px #ccc;
+    border: 1px solid #eee;
+    padding: 10px;
+    box-sizing: border-box;
+    display: block;
+}
+
+.Input {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+    display: flex;
+}
+
+.buttons {
+  width: 100%;
+}
+
+.Label{
+    font-weight: bold;
+    display: block;
+    margin-bottom: 8px;
+    width: 50%;
+}
+
+.InputElement{
+    outline: none;
+    border: 1px solid #ccc;
+    background-color: white;
+    padding: 6px 10px;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 8px;
+    width: 50%;
+}
+
+.InputElement:focus{
+    outline: none;
+    background-color: #ccc;
+}

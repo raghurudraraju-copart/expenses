@@ -15,9 +15,9 @@ const home = (props) => {
                     <Link to='/userTransactions' className={classes.Tile}>
                         <div>My Transactions</div>
                     </Link>
-                    <a className={classes.Tile}>
+                    <Link to='/userPayments' className={classes.Tile}>
                         <div>Payments</div>
-                    </a>
+                    </Link>
                     <a className={classes.Tile}>
                         <div>Add User Roles</div>
                     </a>
