@@ -37,5 +37,45 @@
 
 .tabsContainer {
   width: 80%;
-  margin: 18px auto;  
+  margin: 18px auto;
 }
+
+.chartTable {
+  width: 50%;
+  display: inline-block;
+  right: 15px;
+  position: absolute;
+  border: 1px solid black;
+}
+
+.chartTable .chartTableHead {
+  display: flex;
+  flex-direction: row;
+  background-color: grey;
+}
+
+.chartTableHead .chartHead {
+  width: 50%;
+  border: 1px solid black;
+  padding: 6px;
+  font-weight: bold;
+}
+
+.chartTable .chartTableBody {
+  display: flex;
+  flex-direction: row;
+}
+
+.chartTableBody .chartBody {
+  width: 50%;
+  border: 1px solid black;
+  padding: 6px;
+}
+
+/* div.chartHead:nth-child(even) {
+  border-left: 0;
+}
+
+div.chartBody:nth-child(even) {
+  border-left: 0;
+} */

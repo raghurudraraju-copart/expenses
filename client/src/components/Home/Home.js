@@ -25,6 +25,23 @@ const pieChartGraph = (data) => (
     </svg>
 )
 
+const showTable = (data, headings) => (
+  <div className={classes.chartTable}>
+  { data.map((ele, i) => <div className={classes.chartTableInner}>
+        { <div>
+            { i === 0 && <div className={classes.chartTableHead}>
+              <div className={classes.chartHead}>{headings[0]}</div>
+              <div className={classes.chartHead}>{headings[1]}</div>
+            </div>}
+            <div className={classes.chartTableBody}>
+              <div className={classes.chartBody}>{ele.label}</div>
+              <div className={classes.chartBody}>{ele.value}</div>
+            </div>
+          </div>}
+
+    </div>) }
+  </div>
+)
 
 let formatGraphData = (data, valueField, labelField) => {
   let formatGraphInnerData = reduceBy((acc, next) => acc + next[valueField], 0, (x) => x[labelField], data);
@@ -120,6 +137,7 @@ class home extends Component {
                             }}>
                             <h2 style={{marginTop:0}}>My Transactions</h2>
                             {this.state.showMyTranscationsChart && pieChartGraph(userTransactionsGraphData)}
+                            {this.state.showMyTranscationsChart && showTable(userTransactionsGraphData, ["Name", "Amount"])}
                           </div>
                         </Tab>
                         <Tab
@@ -134,6 +152,7 @@ class home extends Component {
                             }}>
                             <h2 style={{marginTop:0}}>My Payments</h2>
                             {this.state.showMyPaymentsChart && pieChartGraph(userPaymentsGraphData)}
+                            {this.state.showMyPaymentsChart && showTable(userPaymentsGraphData, ["Name", "Balance"])}
                           </div>
                         </Tab>
                     </Tabs>
