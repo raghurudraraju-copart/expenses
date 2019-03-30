@@ -1,9 +1,6 @@
 .UserTransactions{
     width: 100%;
     text-align: center;
-    position:fixed;
-    top: 30%;
-
 }
 
 .UserTransactions a{
