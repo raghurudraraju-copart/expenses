@@ -17,7 +17,6 @@ const toolbar = class extends Component {
     logOutHandler = () => {
       this.props.history.push('/');
     }
-    }
 
     render() {
         return (
