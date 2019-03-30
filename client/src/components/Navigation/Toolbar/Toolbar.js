@@ -20,22 +20,24 @@ const toolbar = class extends Component {
 
     render() {
         return (
-            <Aux>
-                <header className={classes.Toolbar} >
-                    <div className={classes.Logo} onClick={this.logoClickedHandler}>
-                        <Logo />
-                    </div>
-                    <div style={{ width: '100%' }}>
-                        <span style={{paddingTop:'10px'}}>Welcome {this.props.username}</span>
-                        { this.props.username &&
-                            <span onClick={this.logOutHandler} style={{cursor: 'pointer', display:'flex', flexDirection: 'column', alignItems: 'center'}} >
-                              <i className="material-icons">exit_to_app</i>
-                              <span style={{padding: 0}}>Logout</span>
-                            </span>
-                        }
-                    </div>
-                </header>
-            </Aux>
+            <div style={{marginTop:"60px"}}>
+                <Aux>
+                    <header className={classes.Toolbar} >
+                        <div className={classes.Logo} onClick={this.logoClickedHandler}>
+                            <Logo />
+                        </div>
+                        <div style={{ width: '100%' }}>
+                            <span style={{paddingTop:'10px'}}>Welcome {this.props.username}</span>
+                            { this.props.username &&
+                                <span onClick={this.logOutHandler} style={{cursor: 'pointer', display:'flex', flexDirection: 'column', alignItems: 'center'}} >
+                                  <i className="material-icons">exit_to_app</i>
+                                  <span style={{padding: 0}}>Logout</span>
+                                </span>
+                            }
+                        </div>
+                    </header>
+                </Aux>
+            </div>
         )
     }
 }
