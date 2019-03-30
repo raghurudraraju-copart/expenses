@@ -16,11 +16,11 @@ let width = 250;
 let height = 250;
 let minViewportSize = Math.min(width, height);
 let radius = (minViewportSize * .9) / 2;
-let x = width / 2+30;
+let x = width / 2+120;
 let y = height / 2+30;
 
 const pieChartGraph = (data) => (
-    <svg width="300" height="300">
+    <svg width="480" height="330" x="60" dx="90">
       <Pie x={x} y={y} radius={radius} data={data} />
     </svg>
 )

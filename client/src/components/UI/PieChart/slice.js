@@ -27,7 +27,7 @@ class Slice extends React.Component {
     }
 
     let renderTextAnchor = (value) => (value.endAngle + value.startAngle) / 2 > Math.PI ? 'end' : 'start'
-    let renderX = (value) => (value.endAngle + value.startAngle) / 2 > Math.PI ? (arc.centroid(value)[0] * 2)+60 : (arc.centroid(value)[0] * 2)-60;
+    let renderX = (value) => (value.endAngle + value.startAngle) / 2 > Math.PI ? (arc.centroid(value)[0] * 2)+60 : (arc.centroid(value)[0] * 2)-40;
     let renderY = (value) => (value.endAngle + value.startAngle) / 2 > Math.PI ? (arc.centroid(value)[1] * 2)+40 : (arc.centroid(value)[1] * 2)-40;
 
     return (

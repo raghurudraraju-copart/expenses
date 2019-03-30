@@ -46,6 +46,8 @@
   right: 15px;
   position: absolute;
   border: 1px solid black;
+  max-height: 320px;
+  overflow: auto;
 }
 
 .chartTable .chartTableHead {
