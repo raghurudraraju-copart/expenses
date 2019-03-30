@@ -34,3 +34,8 @@
 .Tile:hover{
     transform: scale(1.05);
 }
+
+.tabsContainer {
+  width: 80%;
+  margin: 30px auto;  
+}

@@ -1,9 +1,12 @@
 import React from 'react';
+import { connect } from 'react-redux';
+import {Link} from 'react-router-dom';
+import {Tabs, Tab} from 'material-ui/Tabs';
+import FontIcon from 'material-ui/FontIcon';
+
 import classes from './Home.css';
 import Toolbar from '../../components/Navigation/Toolbar/Toolbar';
 import Aux from '../../hoc/Auxilary/Auxilary';
-import { connect } from 'react-redux';
-import {Link} from 'react-router-dom';
 
 const home = (props) => {
   
@@ -25,8 +28,20 @@ const home = (props) => {
                         <div>Add Payment Modes</div>
                     </a>
                 </div>
+            </Aux>
+            <div className={classes.tabsContainer}>
+                    <Tabs>
+                        <Tab
+                          icon={<FontIcon className="material-icons">receipt</FontIcon>}
+                          label="My Transactions"
+                        />
+                        <Tab
+                          icon={<FontIcon className="material-icons">credit_card</FontIcon>}
+                          label="My Payments"
+                        />
+                    </Tabs>
             </div>
-        </Aux>
+        </div>
     );
 }
 
