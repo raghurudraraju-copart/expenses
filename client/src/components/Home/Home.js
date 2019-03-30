@@ -3,7 +3,8 @@ import { connect } from 'react-redux';
 import {Link} from 'react-router-dom';
 import {Tabs, Tab} from 'material-ui/Tabs';
 import FontIcon from 'material-ui/FontIcon';
-import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider'
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+import { reduceBy, forEachObjIndexed } from 'ramda';
 
 import classes from './Home.css';
 import Toolbar from '../../components/Navigation/Toolbar/Toolbar';
