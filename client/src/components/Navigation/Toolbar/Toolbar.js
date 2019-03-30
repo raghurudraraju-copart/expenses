@@ -25,7 +25,15 @@ const toolbar = class extends Component {
                     <div className={classes.Logo} onClick={this.logoClickedHandler}>
                         <Logo />
                     </div>
-                    <div style={{ width: '100%' }}><span>Welcome {this.props.username}</span> { this.props.username && <span style={{cursor: 'pointer'}} onClick={this.logOutHandler}><i className="material-icons">exit_to_app</i></span>}</div>
+                    <div style={{ width: '100%' }}>
+                        <span style={{paddingTop:'10px'}}>Welcome {this.props.username}</span>
+                        { this.props.username &&
+                            <span onClick={this.logOutHandler} style={{cursor: 'pointer', display:'flex', flexDirection: 'column', alignItems: 'center'}} >
+                              <i className="material-icons">exit_to_app</i>
+                              <span style={{padding: 0}}>Logout</span>
+                            </span>
+                        }
+                    </div>
                 </header>
             </Aux>
         )
