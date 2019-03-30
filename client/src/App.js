@@ -6,6 +6,7 @@ import { Provider } from 'react-redux';
 import Home from './components/Home/Home.js';
 import Login from './container/Login/Login';
 import UserTransactions from './container/UserTransactions/UserTransactions';
+import UserPayments from './container/UserPayments/UserPayments';
 import { store } from './store.js'
 import { BrowserRouter } from 'react-router-dom';
 
@@ -21,6 +22,7 @@ class App extends Component {
             <Switch>
               <Route path="/home" component={Home} />
               <Route path="/userTransactions" component={UserTransactions} />
+              <Route path="/userPayments" component={UserPayments} />
               <Route exact path="/" component={Login} />
             </Switch>
           </Router>

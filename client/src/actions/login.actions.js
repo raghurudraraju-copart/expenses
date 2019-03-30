@@ -22,6 +22,9 @@ function login(username, password) {
       .then(res => {
         const userDetails = res.data.userDetails;
         dispatch(success(userDetails));
+
+        localStorage.setItem('userDetails', JSON.stringify(res.data)); // storing userdetails in localStorageObject
+
         history.push('/home');
       })
       .catch(function (error) {
