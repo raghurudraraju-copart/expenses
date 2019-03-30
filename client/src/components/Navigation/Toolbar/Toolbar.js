@@ -20,7 +20,7 @@ const toolbar = class extends Component {
 
     render() {
         return (
-            <div style={{marginTop:"60px"}}>
+            <div>
                 <Aux>
                     <header className={classes.Toolbar} >
                         <div className={classes.Logo} onClick={this.logoClickedHandler}>
