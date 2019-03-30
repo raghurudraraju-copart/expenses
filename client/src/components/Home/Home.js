@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import {Link} from 'react-router-dom';
 import {Tabs, Tab} from 'material-ui/Tabs';
 import FontIcon from 'material-ui/FontIcon';
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider'
 
 import classes from './Home.css';
 import Toolbar from '../../components/Navigation/Toolbar/Toolbar';
@@ -30,6 +31,7 @@ const home = (props) => {
                 </div>
             </Aux>
             <div className={classes.tabsContainer}>
+                <MuiThemeProvider>
                     <Tabs>
                         <Tab
                           icon={<FontIcon className="material-icons">receipt</FontIcon>}
@@ -40,6 +42,7 @@ const home = (props) => {
                           label="My Payments"
                         />
                     </Tabs>
+                </MuiThemeProvider>
             </div>
         </div>
     );
